@@ -1,0 +1,522 @@
+%----------
+%   WARNING
+%----------
+
+% This Guide contains Library recommendations based mainly on APA and IEEE styles, but you must always follow the guidelines of your TFG Tutor and the TFG regulations for your degree.
+
+% THIS TEMPLATE IS BASED ON THE IEEE STYLE 
+
+
+%----------
+% DOCUMENT SETTINGS
+%----------
+
+\documentclass[12pt]{report} % font: 12pt
+
+% margins: 2.5 cm top and bottom; 3 cm left and right
+\usepackage[
+a4paper,
+vmargin=2.5cm,
+hmargin=3cm
+]{geometry}
+
+% Paragraph Spacing and Line Spacing: Narrow (6 pt / 1.15 spacing) or Moderate (6 pt / 1.5 spacing)
+\renewcommand{\baselinestretch}{1.15}
+\parskip=6pt
+
+% Color settings for cover and code listings 
+\usepackage[table]{xcolor}
+\definecolor{azulUC3M}{RGB}{0,0,102}
+\definecolor{gray97}{gray}{.97}
+\definecolor{gray75}{gray}{.75}
+\definecolor{gray45}{gray}{.45}
+
+% PDF/A -- Important for its inclusion in e-Archive. PDF/A is the optimal format for preservation and for the generation of metadata: http://uc3m.libguides.com/ld.php?content_id=31389625. 
+
+% In the template we include the file OUTPUT.XMPDATA. You can download that file and include the metadata that will be incorporated into the PDF file when you compile the memoria.tex file. Then upload it back to your project.  
+\usepackage[a-1b]{pdfx}
+
+% LINKS
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=false,      % text color always black
+    pdfborder={0 0 1},     % activates rectangle thing(1 = width)
+    pdfborderstyle={/S/U}, % (S=solid, D=dashed, U=underline)
+    linkbordercolor={1 0 0},  % red
+    urlbordercolor={0 0 1},   % blue 
+    citebordercolor={0 1 0}   % green
+}
+
+% MATH EXPRESSIONS
+\usepackage{amsmath,amssymb,amsfonts,amsthm}
+
+% Character encoding
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+
+% Times New Roman (text + math)
+\usepackage{newtxtext,newtxmath}
+
+
+% English settings
+\usepackage[english]{babel} 
+\usepackage[babel, english=american]{csquotes}
+\AtBeginEnvironment{quote}{\small}
+
+% Footer settings
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0pt}
+\rfoot{\thepage}
+\fancypagestyle{plain}{\pagestyle{fancy}}
+
+% DESIGN OF THE TITLES of the parts of the work (chapters and epigraphs or sub-chapters)
+\usepackage{titlesec}
+\usepackage{titletoc}
+\titleformat{\chapter}[block]
+{\large\bfseries\filcenter}
+{\thechapter.}
+{5pt}
+{\MakeUppercase}
+{}
+\titlespacing{\chapter}{0pt}{0pt}{*3}
+\titlecontents{chapter}
+[0pt]                                               
+{}
+{\contentsmargin{0pt}\thecontentslabel.\enspace\uppercase}
+{\contentsmargin{0pt}\uppercase}                        
+{\titlerule*[.7pc]{.}\contentspage}                 
+
+\titleformat{\section}
+{\bfseries}
+{\thesection.}
+{5pt}
+{}
+\titlecontents{section}
+[5pt]                                               
+{}
+{\contentsmargin{0pt}\thecontentslabel.\enspace}
+{\contentsmargin{0pt}}
+{\titlerule*[.7pc]{.}\contentspage}
+
+\titleformat{\subsection}
+{\normalsize\bfseries}
+{\thesubsection.}
+{5pt}
+{}
+\titlecontents{subsection}
+[10pt]                                               
+{}
+{\contentsmargin{0pt}                          
+	\thecontentslabel.\enspace}
+{\contentsmargin{0pt}}                        
+{\titlerule*[.7pc]{.}\contentspage}  
+
+
+% Tables and figures settings
+\usepackage{multirow} % combine cells 
+\usepackage{caption} % customize the title of tables and figures
+\usepackage{floatrow} % we use this package and its \ ttabbox and \ ffigbox macros to align the table and figure names according to the defined style.
+\usepackage{array} % with this package we can define in the following line a new type of column for tables: custom width and centered content
+\newcolumntype{P}[1]{>{\centering\arraybackslash}p{#1}}
+\DeclareCaptionFormat{upper}{#1#2\uppercase{#3}\par}
+\usepackage{graphicx}
+\graphicspath{{imagenes/}} % Images folder
+
+% Table layout for engineering
+\captionsetup*[table]{
+	format=upper,
+	name=TABLE,
+	justification=centering,
+	labelsep=period,
+	width=.75\linewidth,
+	labelfont=small,
+	font=small
+}
+
+% Figures layout for engineering
+\captionsetup[figure]{
+	format=hang,
+	name=Fig.,
+	singlelinecheck=off,
+	labelsep=period,
+	labelfont=small,
+	font=small		
+}
+
+% FOOTNOTES
+\usepackage{chngcntr} % continuous numbering of footnotes
+\counterwithout{footnote}{chapter}
+
+% CODE LISTINGS 
+% support and styling for listings. More information in  https://es.wikibooks.org/wiki/Manual_de_LaTeX/Listados_de_código/Listados_con_listings
+\usepackage{listings}
+
+% Custom listing
+\lstdefinestyle{estilo}{ frame=Ltb,
+	framerule=0pt,
+	aboveskip=0.5cm,
+	framextopmargin=3pt,
+	framexbottommargin=3pt,
+	framexleftmargin=0.4cm,
+	framesep=0pt,
+	rulesep=.4pt,
+	backgroundcolor=\color{gray97},
+	rulesepcolor=\color{black},
+	%
+	basicstyle=\ttfamily\footnotesize,
+	keywordstyle=\bfseries,
+	stringstyle=\ttfamily,
+	showstringspaces = false,
+	commentstyle=\color{gray45},     
+	%
+	numbers=left,
+	numbersep=15pt,
+	numberstyle=\tiny,
+	numberfirstline = false,
+	breaklines=true,
+	xleftmargin=\parindent
+}
+
+\captionsetup*[lstlisting]{font=small, labelsep=period}
+ 
+\lstset{style=estilo}
+\renewcommand{\lstlistingname}{\uppercase{Código}}
+
+
+% REFERENCES 
+
+% IEEE bibliography setup
+\usepackage[backend=biber, style=ieee, isbn=false,sortcites, maxbibnames=6, minbibnames=1]{biblatex} % Setting for IEEE citation style, recommended for engineering. "maxbibnames" indicates that from 6 authors truncate the list in the first one (minbibnames) and add "et al." as used in the IEEE style.
+
+\addbibresource{referencias.bib} % The references.bib file in which the bibliography used should be
+
+\usepackage{tikz}
+\usetikzlibrary{shapes, arrows, positioning, fit}
+
+
+%-------------
+%	DOCUMENT
+%-------------
+
+\begin{document}
+\pagenumbering{roman} % Roman numerals are used in the numbering of the pages preceding the body of the work.
+	
+%----------
+%	COVER
+%----------	
+\begin{titlepage}
+	\begin{sffamily}
+	\color{azulUC3M}
+	\begin{center}
+		\begin{figure}[H] % UC3M Logo
+			\makebox[\textwidth][c]{\includegraphics[width=16cm]{logo_UC3M.png}}
+		\end{figure}
+		\vspace{2.5cm}
+		\begin{Large}
+			Bachelor Degree in Computer Science \& Engineering\\			
+			 2025-2026\\ % Academic year
+			\vspace{2cm}		
+			\textsl{Bachelor Thesis}
+			\bigskip
+			
+		\end{Large}
+		 	{\Huge  Advancing Plant Phenotyping in Rangelands Through Drone-Derived Imagery and Video Data }\\
+		 	\vspace*{0.5cm}
+	 		\rule{10.5cm}{0.1mm}\\
+			\vspace*{0.9cm}
+			{\LARGE Javier Martín Pizarro}\\ 
+			\vspace*{1cm}
+		\begin{Large}
+			Joao Ricardo Pereira Valente\\
+			Leganés, Madrid\\
+            June, 2026\\
+		\end{Large}
+	\end{center}
+	\vfill
+	\color{black}
+	% IF OUR WORK IS TO BE PUBLISHED UNDER A CREATIVE COMMONS LICENSE, INCLUDE THESE LINES. IS THE RECOMMENDED OPTION.
+	\includegraphics[width=4.2cm]{creativecommons.png}\\ % Creative Commons Logo
+    This work is licensed under Creative Commons \textbf{Attribution – Non Commercial – Non Derivatives}
+	\end{sffamily}
+\end{titlepage}
+
+\newpage % blank page
+\thispagestyle{empty}
+\mbox{}
+
+%----------
+%	ABSTRACT AND KEYWORDS 
+%----------	
+\renewcommand\abstractname{\large\bfseries\filcenter\uppercase{ABSTRACT}}
+\begin{abstract}
+\thispagestyle{plain}
+\setcounter{page}{3}
+	
+	% Write your abstract
+    Site-specific weed control (SSWC) has been a problem since humans started to develop the field of agriculture. During the ages, existing methodologies did not change at all: they were based on manual detection and extraction. However, this changed with the appearance of modern computers.
+
+    In the last fifty years, there has been an extreme evolution in the detection of non-desired weeds. However, it was not until recently that newer computational methodologies based on Deep Learning and Artificial Neural Networks - more specifically Convolutional Neural Networks - were introduced into the field.  
+
+    This work addresses the development of a computer vision model capable of locating and counting instances of \textit{Eryngium horridum}---commonly known as "cardilla"—--a perennial, spiny weed species native to the grasslands of Uruguay, Argentina, and southern Brazil. By leveraging drone-derived imagery and video data, this thesis aims to contribute to precision agriculture and ecological monitoring, enhancing the sustainability and efficiency of rangeland management practices.
+
+    \vfill
+    
+	\textbf{Keywords:} % add the keywords
+    Site-specific Weed Control, Object Counting, Object Segmentation, Computer Vision, Artificial Intelligence
+
+    \vspace*{2cm}
+
+\end{abstract}
+	\newpage % Blank page
+	\thispagestyle{empty}
+	\mbox{}
+
+
+%----------
+%	Dedication
+%----------	
+\chapter*{Dedication}
+
+\setcounter{page}{5}
+	
+	I would like to dedicate this work to the two fundamental pillars of my life:
+
+    To my family. You have been there for me no matter what. Even when I did not deserve it. You will always be the beacon I need when I must return to safe ports.
+
+    To my brothers. We are not blood-related, but you will always have a seat at my table. With you, I found loyalty even in the worst of the storms.
+		
+	\vfill
+
+    \begin{flushright}
+    \begin{minipage}{0.7\textwidth}
+        \textit{" We will all die and the universe will carry on without care.
+        All that we have is that shout into the wind—how we live.
+        How we go. And how we stand before we fall. "}
+    
+        \vspace{0.3cm}
+        \end{minipage}
+        \\
+        --- Pierce Brown, \textit{Golden Son}
+    \end{flushright}
+
+
+    \vspace{2cm}
+	
+	\newpage % blank page
+	\thispagestyle{empty}
+	\mbox{}
+	
+
+%----------
+%	TOC
+%----------	
+
+%--
+% TOC
+%-
+\tableofcontents
+\thispagestyle{fancy}
+
+\newpage % blank page
+\thispagestyle{empty}
+\mbox{}
+
+%--
+% List of figures. If they are not included, comment the following lines
+%-
+\listoffigures
+\thispagestyle{fancy}
+
+\newpage % blank page
+\thispagestyle{empty}
+\mbox{}
+
+%--
+% List of tables. If they are not included, comment the following lines
+%-
+\listoftables
+\thispagestyle{fancy}
+
+\newpage % blankpage
+\thispagestyle{empty}
+\mbox{}
+
+%----------
+%	THESIS
+%----------	
+\clearpage
+\pagenumbering{arabic} % numbering with Arabic numerals for the rest of the document.	
+
+\chapter{Introduction and Motivation}
+
+The purpose of this chapter is to introduce the topic of the thesis, present the current state of the art --- from both theoretical and practical perspectives --- and outline the motivations behind it, as well as the regulatory framework and the associated economic impact.
+
+\section{Motivation}
+
+Agriculture plays a crucial role in the economy of the vast majorities of the countries in the world. Although in developed countries such as Spain it plays a less important role (near 2.3\% in 2024\cite{worldbank2024}), in some developing countries such as Hispanic America it can raise up to 8\%.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{imagenes/world_bank_group_pib.jpg}
+    \caption{Gross Domestic Product (GDP) share of agriculture, forestry, and fishing (in \%) between the years 1960 and 2024.
+    Source: \textit{World Bank Data} \cite{worldbank2024}.}
+    \label{fig:worldbank_gdp}
+\end{figure}
+
+Maintaining an adequate rhythm of production is vital not only for the economy, but for sustaining the quality of life of the population. Thus, innovating with new technologies in this field has always been necessary to supply the increasing demand.
+
+Weeds have been consistently a problem; not only they reduced the quality and quantity of the crops, but detecting them was an extenuating job. Until the development of modern machinery, it was mainly done by hand --- covering entire fields and removing them --- or using agriculture techniques for avoiding their apparition --- mainly grazing and crops rotation ---, with mediocre results.
+
+In the early years of the XX century, tractors were starting to be more and more common, reducing manual labour activities a lot. However, there was still the possibility of developing weeds in the fields and not being able of estimating the total amount of them in the total land size.
+
+Estimating the amount per hectare (or other desired unit of measure) is vital for understanding how weeds are influencing in the growth and quality of crops. Depending on the density of these unwanted plants, different quantities of herbicides can be used, reducing toxins and improving the condition of the batches.
+
+Modern computation technologies were firstly used near the 70s: archaic solutions based on reflecting-based living ("green") plants with photoelectric diodes\cite{Coleman2022} were proposed. However, these methods were highly dependant on the ability of controlling the constantly in-change environment.
+
+In the 80s, with the appearance of digital cameras, a new hand of possibilities appeared. As the spectral-colour range cameras were more and more affordable, a totally new world for exploring this field was discovered.
+
+The first predecessor of formal Convolutional Neural Networks --- known as the neocognitron ---, presented by Kunihiko Fukushima was a totally game-changer. It was a multilayer perceptron (MLP) able to extract features and predict handwritten numerals from "0" to "9"\cite{FUKUSHIMA1988119}. Fukushima also proposed several unsupervised training algorithms. Although they were revolutionary, after the proposal of back-propagation \cite{ACKLEY1985147} (which is heavily used in computer vision currently) they fell into disuse.
+
+After it, a spiral of hype and constant changes for these neural networks came into scene. In 1998, the LeNet-5\cite{Lecun98} was the first neural network to include back-propagation end-to-end which was tested with the MNIST dataset.
+
+In 2012, the neural network AlexNet was proposed. With nearly 22,000 categories (labels), this neural network was able to generalise a vast number of different objects with high precision. However, the most innovative thing was that it was \textbf{trained using Graphics Processing Units --- GPUs ---}\cite{Alex2012}, something that was never used in the field. This rapidly raised the level of training methodologies, reducing the time elapsed.
+
+Only three years later, Microsoft engineers proposed a new method to lighten the weight of neural networks. After benchmarking and stating that \textbf{"the deeper network has higher training error, and thus test error"}\cite{Kaiming2015}. This means that the more layers a network has (above a critical limit), the less precise it gets. They propose the Deep Residual Learning, based on the difference (error) between the expected value and the obtained one.
+
+$$F(x) = H(x) - x$$
+$$y = F(x) + x$$
+
+Using this approach, the net eases the learning process compared to the standards of the moment. As a subsequent effect, they are able to reduce the weight of the networks up to an 80\% (compared with VGG nets).
+
+It was not until 2012 that convolutional neural networks were mature enough in order to be applied in the agriculture field. However, there have been (and still are) important limitations when using these methodologies --- which are by far the most effective---.
+
+The main limitation is not computational or algorithmic, but the datasets used for training the nets. It is common to have a very limited dataset with very few instances of useful data to preprocess and work with. Restricted to the regions where they were obtained, it is complicated to make a dataset that is representative for an extensive region. 
+
+Nonetheless, the region is not the only factor, but also the seasons of the year. Generating a fine dataset that shows every phenotype of a given plant in a specific moment is expensive --- economically and humanly ---.
+
+Thus, the aim of this work is not only to create a model able to segment and count instances of the cardilla, but to create a dataset competent enough to provide the sufficient information for future works about the field.
+
+\subsection{About the \textit{Eryngium horridum}}
+
+Original from Hispanic America, the \textit{Eryngium horridum} ---also known as cardilla or caraguatá--- is common to locate in the plain lands of Uruguay, southern Brazil and central-eastern Argentina.
+
+The plant is a perennial forb with a highly distinctive morphology; it is a rosette with numerous spiny linear leaves that can reach up to 65 cm in length and 2 cm in width. Its inflorescence axis can grow as tall as 2 meters \cite{Quinones2025}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{imagenes/eryngium_horridum.jpg}
+    \caption{\textit{Eryngium Horridum}: Left image: bottom part of the plant. Upper right: flower. Bottom left: inflorescence}.
+    \label{fig:eryngium_horridum}
+\end{figure}
+
+One peculiarity of this plant is its resilience in adverse conditions. After experiencing fires or frosts, it has been mentioned to see the floral part of the stem to grow quicker and bigger than before.
+
+Although there are no common uses for this plant, it is known that it helps in the scarring process. However, here ends its applications. It is not harvested, at the contrary, it is heavily prosecuted because of the rapid growing through fields, destroying useful terrain for cropping in a few months. Not even the livestock desires to eat it, unless excessive hunger.
+
+A quickly identification of the plant is needed to solve the issue before it ruins the field and the crops already planted.
+
+\subsection{Technical challenge}
+
+Although it is clearly obvious the distinctive shape of the plant, trying to observe them from an aerial perspective gets much more complicated. Depending on the height of the UAV (Unmanned Aerial Vehicle) and the quality and resolution of the camera, the difficulty can increase exponentially.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{imagenes/aerialfield.png}
+    \caption{Recorded aerial view from an unknown height. Sizes differ between each individual deppending on different factors, such as the dryness of the plant.}
+    \label{fig:aerial_eryngium}
+\end{figure}
+
+Estimating the possibles individuals per hectare by hand, even with the help of UAVs, is complex enough. In the last ten years, the trend of computer vision has also arrived to this field.
+
+\textbf{Computer vision}, which a field of artificial intelligence --- more specifically from machine learning ---, is a discipline that allows computers to process images (frames) and to extract meaningfully data and make decisions.
+
+This challenge is based on the Multiple Object Tracking (MOT); which aims for identifying an arbitrary number of individuals $n$ with the maximum precision possible.
+
+In the literature, there are currently two approaches for solving the MOT problem: \textbf{Detection-based Tracking (DBT)} and \textbf{Detection-Free Tracking (DFT)}. Whereas the DBT is used an external and automatic detector for localising the objects in the frame, the DFT needs some manual input at first glance in order to keep up with the trajectory of the item.
+
+\begin{table}
+    
+\end{table}
+
+
+\section{State of Art: An introduction to Object Detection and Segmentation}
+
+\section{Regulatory Framework}
+
+\section{Socio-economic impact}
+
+% IMPORTANT: Latex special characters are: # $ % & \ ^ _ { } ~. To avoid mistakes when compiling try writing \ before. For: \ use \textbackslash ; for ^ \textasciitilde and ~ \textasciicircum.
+
+%     Example of figure:
+%     \begin{figure}[H]
+%     	\ffigbox[\FBwidth] {
+%     	\caption[Name as seen in Index]{Figure name}
+%     	}
+%     	{\includegraphics[scale=0.6]{imagenes/creativecommons.png}}
+%     \end{figure}
+    
+
+%     Example of table:
+% \begin{table}[H]
+% 	\ttabbox[\FBwidth]
+% 	{\caption{Lorem ipsum}}
+% 	{\begin{tabular}{|c|P{1.5cm}|c|P{1.5cm}|P{2cm}|c|P{1.5cm}|P{2cm}|}
+% 		\hline
+% 		\multicolumn{2}{|c|}{\textbf{I}} & \multicolumn{2}{c|}{\textbf{II}} & \multicolumn{3}{c|}{\textbf{III}} & \textbf{IV} \\
+% 		\hline
+% 		x & y & x & y & x & y & x & y \\
+% 		\hline
+% 		10.0 & 8.04 & 10.0 & 9.14 & 10.0 & 7.46 & 8.0 & 6.58 \\
+% 		\hline
+% 		8.0 & 6.95 & 8.0 & 8.14 & 8.0 & 6.77 & 8.0 & 5.76 \\
+% 		\hline
+% 		13.0 & 7.58 & 13.0 & 8.74 & 13.0 & 12.74 & 8.0 & 7.71 \\
+% 		\hline
+% 		9.0 & 8.81 & 9.0 & 8.77 & 9.0 & 7.11 & 8.0 & 8.84 \\
+% 		\hline
+% 		11.0 & 8.33 & 11.0 & 9.26 & 11.0 & 7.81 & 8.0 & 8.47 \\
+% 		\hline
+% 		14.0 & 9.96 & 14.0 & 8.10 & 14.0 & 8.84 & 8.0 & 7.04 \\
+% 		\hline
+% 		6.0 & 7.24 & 6.0 & 6.13 & 6.0 & 6.08 & 8.0 & 5.25 \\
+% 		\hline
+% 		4.0 & 4.26 & 4.0 & 3.10 & 4.0 & 5.39 & 19.0 & 12.50 \\
+% 		\hline
+% 		12.0 & 10.84 & 12.0 & 9.13 & 12.0 & 8.15 & 8.0 & 5.56 \\
+% 		\hline
+% 		7.0 & 4.82 & 7.0 & 7.26 & 7.0 & 6.42 & 8.0 & 7.91 \\
+% 		\hline
+% 		5.0 & 5.68 & 5.0 & 4.74 & 5.0 & 5.73 & 8.0 & 6.89 \\
+% 		\hline
+% 		\multicolumn{5}{l}{Source: BOE}
+% 	\end{tabular}}
+% \end{table}
+
+
+% Start writing here----------------------------------------------------
+
+
+%----------
+%	Bibliography
+%----------	
+
+\clearpage
+\addcontentsline{toc}{chapter}{Bibliography}
+
+\printbibliography
+
+
+
+%----------
+%	Appendix
+%----------	
+
+% If your work includes Appendix, you can uncomment the following lines
+%\chapter* {Appendix x}
+%\pagenumbering{gobble} % Appendix pages are not numbered
+
+
+
+\end{document}
