@@ -207,3 +207,18 @@ marimo/_lsp/
 __marimo__/
 
 data/
+
+# latex compilation shit
+*.aux
+*.bbl
+*.bcf
+*.blg
+*.lof
+*.lot
+*.out
+*.toc
+*.xmpi
+*.xml
+*.gz
+*.fdb*
+*.fls
