@@ -1,3 +1,7 @@
+"""
+This file contains the script for throwing (yes, throwing), petitions to the T-Rex 2 api
+"""
+
 import argparse
 import base64
 import json
@@ -11,7 +15,7 @@ QUERY_TASK_API_URL = (
     'https://api.deepdataspace.com/v2/task_status'  # + /{task_uuid}
 )
 # this image is used for giving T-Rex2 some information about the phenotype of the plant
-HELPER_IMAGE = 'data/v1/train/YDRAY-DJI_20250515122715_0039_D_MP4_162_png.rf.41bcd46db0c603f36d6037f31d757ecd.jpg'
+HELPER_IMAGE = 'data/v2/train/YDRAY-DJI_20250515124024_0043_D_MP4_9_png.rf.2011ae1ea7b1957576b167dd857131fc.jpg'
 
 
 def encode_image_to_base64(path):
@@ -66,7 +70,9 @@ def main():
     predictions = {}
 
     # asume data will be always follow the COCO format
-    annotations_file = 'data/v1/train/_annotations.coco.json'
+    # as the input dir can be dynamic (v1,v2,...,vn) is better to take it
+    # into consideration from the arguments
+    annotations_file = os.path.join(args.input_dir,'_annotations.coco.json')
 
     with open(annotations_file, 'r') as _f:
         labels = json.load(_f)
@@ -114,7 +120,7 @@ def main():
                 'visual_images': [
                     {
                         'image': encode_image_to_base64(helper_image_route),
-                        'interactions': helper_boxes_copy,  # Usa la copia
+                        'interactions': helper_boxes_copy,
                     }
                 ],
             },
@@ -125,6 +131,8 @@ def main():
             url=CREATE_TASK_API_URL,
             json=parameters,  # parameters
             headers=headers,
+            timeout=60,
+            verify=True
         )
 
         json_resp = resp.json()
@@ -164,7 +172,7 @@ def main():
             )
 
     with open(
-        os.path.join(args.output_dir, 'trex_predictions.json'), 'w'
+        os.path.join(args.output_dir, 'trex_predictions_v2.json'), 'w'
     ) as fp:
         json.dump(predictions, fp)
 
