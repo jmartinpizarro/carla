@@ -126,9 +126,9 @@ hmargin=3cm
 
 % Table layout for engineering
 \captionsetup*[table]{
-	format=upper,
+	format=plain,
 	name=TABLE,
-	justification=centering,
+	justification=raggedright,
 	labelsep=period,
 	width=.75\linewidth,
 	labelfont=small,
@@ -194,6 +194,8 @@ hmargin=3cm
 
 \usepackage{tikz}
 \usetikzlibrary{shapes, arrows, positioning, fit}
+\usepackage{subcaption}
+\usepackage{booktabs}
 
 
 %-------------
@@ -257,7 +259,7 @@ hmargin=3cm
 	% Write your abstract
     Site-specific weed control (SSWC) has been a problem since humans started to develop the field of agriculture. During the ages, existing methodologies did not change at all: they were based on manual detection and extraction. However, this changed with the appearance of modern computers.
 
-    In the last fifty years, there has been an extreme evolution in the detection of non-desired weeds. However, it was not until recently that newer computational methodologies based on Deep Learning and Artificial Neural Networks - more specifically Convolutional Neural Networks - were introduced into the field.  
+    In the last fifty years, there has been an extreme evolution in the detection of non-desired weeds. However, it was not until recently that newer computational methodologies based on Deep Learning and Artificial Neural Networks --- more specifically Convolutional Neural Networks --- were introduced into the field that the advances became trully efective.
 
     This work addresses the development of a computer vision model capable of locating and counting instances of \textit{Eryngium horridum}---commonly known as "cardilla"—--a perennial, spiny weed species native to the grasslands of Uruguay, Argentina, and southern Brazil. By leveraging drone-derived imagery and video data, this thesis aims to contribute to precision agriculture and ecological monitoring, enhancing the sustainability and efficiency of rangeland management practices.
 
@@ -375,7 +377,7 @@ Estimating the amount per hectare (or other desired unit of measure) is vital fo
 
 Modern computation technologies were firstly used near the 70s: archaic solutions based on reflecting-based living ("green") plants with photoelectric diodes\cite{Coleman2022} were proposed. However, these methods were highly dependant on the ability of controlling the constantly in-change environment.
 
-In the 80s, with the appearance of digital cameras, a new hand of possibilities appeared. As the spectral-colour range cameras were more and more affordable, a totally new world for exploring this field was discovered.
+In the 80s, with the appearance of digital cameras, a new bunch of possibilities appeared. As the spectral-colour range cameras were more and more affordable, a totally new world for exploring this field was discovered.
 
 The first predecessor of formal Convolutional Neural Networks --- known as the neocognitron ---, presented by Kunihiko Fukushima was a totally game-changer. It was a multilayer perceptron (MLP) able to extract features and predict handwritten numerals from "0" to "9"\cite{FUKUSHIMA1988119}. Fukushima also proposed several unsupervised training algorithms. Although they were revolutionary, after the proposal of back-propagation \cite{ACKLEY1985147} (which is heavily used in computer vision currently) they fell into disuse.
 
@@ -432,16 +434,62 @@ Estimating the possibles individuals per hectare by hand, even with the help of 
 
 \textbf{Computer vision}, which a field of artificial intelligence --- more specifically from machine learning ---, is a discipline that allows computers to process images (frames) and to extract meaningfully data and make decisions.
 
-This challenge is based on the Multiple Object Tracking (MOT); which aims for identifying an arbitrary number of individuals $n$ with the maximum precision possible.
+This challenge is based on the Multiple Object Tracking (MOT); which aims for identifying an arbitrary number of $n$ individuals with the maximum precision possible.
 
 In the literature, there are currently two approaches for solving the MOT problem: \textbf{Detection-based Tracking (DBT)} and \textbf{Detection-Free Tracking (DFT)}. Whereas the DBT is used an external and automatic detector for localising the objects in the frame, the DFT needs some manual input at first glance in order to keep up with the trajectory of the item.
 
-\begin{table}
-    
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.75\linewidth]{imagenes/mot_types.pdf}
+	\caption{Visual representation of the MOT problem. The multiplexer determines the approach: either Detection-based Tracking or Detection-Free Tracking.}
+	\label{fig:mot_types}
+\end{figure}
+
+These approaches, although similar, are not used in the same use cases. The applications differ, as well as the advantages and disadvantages depending on the scenaries where they are used.
+
+\begin{table}[H]
+    \centering
+        \begin{tabular}{lcc}
+        \toprule
+        \textbf{Variables} & \textbf{DBT} & \textbf{DFT} \\
+        \midrule
+        Initialization & automatic, possibly imperfect & manual, perfect \\
+        \# of objects & varying & fixed \\
+        Applications & specific type of objects & any types of objects \\
+        Advantages & ability to handle varying number of objects & free of object detector \\
+        Disadvantages & performance depends on object detection & manual initialization \\    
+		\bottomrule
+    \end{tabular}
+    \caption{Comparison between DBT and DFT. Adapted from \cite{LUO2021103448}}
+    \label{tab:dbt_vs_dft}
 \end{table}
 
+Whereas the DBT is made up from a pipeline: the \textbf{detector} (in charge of predicting the boxes of the items) and the \textbf{asociator} (in charge of asociating each box with a label or class) and then uses associations algorithms (see \ref{subsec:asoc_algorithm}) for identifying the movement of an object, the DFT is much more complex. The net itself learns how to predict the trayectory of the individual, using transformers and tokens for maintining the individual identity of the model.
+
+At first, DFT may seem like a reasonable option to choose. However, its complexity its not trivial. It is important to mention that usually is required to have big datasets for these types of models. In this work, the quantity and quality of the frames are not as large and precise as it would be prefereable. Thus, Detection-Based Tracking is a better option.
+
+\begin{itemize}
+	\item Freedom for controlling the detector (YOLO, Faster R-CNN...)
+	\item Atomic: is easier to modify local features.
+	\item Different methods of association can be used for experimenting with them.
+\end{itemize}
+
+In summary, while both DBT and DFT approaches seems to be good enough results, the \textbf{Detection Based Tracking} method can give us more interpretability and control while developing the framework, specially with the data limitations of this study.
+
+Therefore, the main focus of this study will be on the DBT pipeline, combining different classification models with associations algorithms. However, to evaluate the potential of more recent and capable technologies, the \textbf{T-Rex 2} model \cite{Jiang2024trex2} --- a representative of the DFT family --- will be also tested as a comparative benchmark. 
+
+From this technical review, several questions arise:
+
+\begin{enumerate}
+	\item How effectively can a detection-based model identify, localize and track the \textit{Eryngium horridum}?
+	\item How do supervised models performed (DBT) compared to end-to-end transformers-based arquitectures such as T-Rex 2 (DFT)?
+	\item What are the limitations and generalization capabilities of these models when faced across different plant densities, flight altitudes, and observation perspectives?
+\end{enumerate}
 
 \section{State of Art: An introduction to Object Detection and Segmentation}
+
+\subsection{Asociation Algorithms}
+\label{subsec:asoc_algorithm}
 
 \section{Regulatory Framework}
 
@@ -496,6 +544,21 @@ In the literature, there are currently two approaches for solving the MOT proble
 
 
 % Start writing here----------------------------------------------------
+\chapter{Models}
+\section{T-Rex 2}
+\begin{itemize}
+	\item DFT
+	\item Tiene una alta precisión para identificar las cardillas, pero no alcanza a capturar el tamaño total de dicha planta con una sola imagen como muestreo. Si se añadiesen más imágenes, se podría tener una mayor precisión.
+	\item De nuevo, dependiendo de la imagen del muestreo el resultado cambia mucho. Cuando el muestreo es una imagen clara de las cardillas --- en perpendicular con el suelo --- la precisión mejora mucho para ese tipo de imágenes, pero no mejora (incluso empeora) en las imágenes que no son de ese tipo.
+	\item De nuevo, por el tamaño de muestreo, no es capaz de generalizar correctamente si nos encontramos con unidades secas o no.
+	\item En fotos con mucha maleza, la generalización no funciona como se esperaba (importante mencionar que ninguna foto de muestreo incluía este tipo de fotos).
+\end{itemize}
+
+\textbf{A pesar de todo esto, tenemos un IoU relativamente alto para algunas imágenes. La media de IoU está en \textit{0.697}}
+
+\textbf{Se debería de probar con más tipos de imágenes de muestreo. No tengo tokens suficientes.}
+
+\textit{Hipótesis}: el modelo es muy bueno, pero se debe de ejecutar con un dataset relativamente grande y bueno para que sea capaz de servir como un muestreo amplio para muchos casos genéricos. 
 
 
 %----------

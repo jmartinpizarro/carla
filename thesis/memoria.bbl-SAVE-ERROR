@@ -1,0 +1,370 @@
+% $ biblatex auxiliary file $
+% $ biblatex bbl format version 3.3 $
+% Do not modify the above lines!
+%
+% This is an auxiliary file used by the 'biblatex' package.
+% This file may safely be deleted. It will be recreated by
+% biber as required.
+%
+\begingroup
+\makeatletter
+\@ifundefined{ver@biblatex.sty}
+  {\@latex@error
+     {Missing 'biblatex' package}
+     {The bibliography requires the 'biblatex' package.}
+      \aftergroup\endinput}
+  {}
+\endgroup
+
+
+\refsection{0}
+  \datalist[entry]{none/global//global/global/global}
+    \entry{worldbank2024}{misc}{}{}
+      \name{author}{1}{}{%
+        {{hash=eb963c1731cf870b94450df5798926ce}{%
+           family={Bank},
+           familyi={B\bibinitperiod},
+           given={World},
+           giveni={W\bibinitperiod}}}%
+      }
+      \strng{namehash}{eb963c1731cf870b94450df5798926ce}
+      \strng{fullhash}{eb963c1731cf870b94450df5798926ce}
+      \strng{fullhashraw}{eb963c1731cf870b94450df5798926ce}
+      \strng{bibnamehash}{eb963c1731cf870b94450df5798926ce}
+      \strng{authorbibnamehash}{eb963c1731cf870b94450df5798926ce}
+      \strng{authornamehash}{eb963c1731cf870b94450df5798926ce}
+      \strng{authorfullhash}{eb963c1731cf870b94450df5798926ce}
+      \strng{authorfullhashraw}{eb963c1731cf870b94450df5798926ce}
+      \field{sortinit}{2}
+      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{howpublished}{\url{https://data.worldbank.org/indicator/NV.AGR.TOTL.ZS?end=2024&locations=BR-UY-AR-ES-1W&start=1960&view=chart}}
+      \field{note}{Accessed October 2025}
+      \field{title}{World Development Indicators: Agriculture, forestry, and fishing, value added (\% of GDP)}
+      \field{year}{2024}
+    \endentry
+    \entry{Coleman2022}{article}{}{}
+      \name{author}{9}{}{%
+        {{hash=df1637c6be62c55ae4d90b5bec376a78}{%
+           family={Coleman},
+           familyi={C\bibinitperiod},
+           given={Guy\bibnamedelima R.Y.},
+           giveni={G\bibinitperiod\bibinitdelim R\bibinitperiod}}}%
+        {{hash=cfba2c096aca770fda5b4fee996b3ecb}{%
+           family={Bender},
+           familyi={B\bibinitperiod},
+           given={Asher},
+           giveni={A\bibinitperiod}}}%
+        {{hash=61a8209dc11cc6058cb81b79d79c926b}{%
+           family={Hu},
+           familyi={H\bibinitperiod},
+           given={Kun},
+           giveni={K\bibinitperiod}}}%
+        {{hash=d653f8fe6db674b3d3d7d1cc66d0d1bc}{%
+           family={Sharpe},
+           familyi={S\bibinitperiod},
+           given={Shaun\bibnamedelima M.},
+           giveni={S\bibinitperiod\bibinitdelim M\bibinitperiod}}}%
+        {{hash=42ffe920cf33704a57170313e931b93b}{%
+           family={Schumann},
+           familyi={S\bibinitperiod},
+           given={Arnold\bibnamedelima W.},
+           giveni={A\bibinitperiod\bibinitdelim W\bibinitperiod}}}%
+        {{hash=dfd203baa572cfcd4ccccf1ee96a6fba}{%
+           family={Wang},
+           familyi={W\bibinitperiod},
+           given={Zhiyong},
+           giveni={Z\bibinitperiod}}}%
+        {{hash=f793ecb14f30d09da34908a127c9f2df}{%
+           family={Bagavathiannan},
+           familyi={B\bibinitperiod},
+           given={Muthukumar\bibnamedelima V.},
+           giveni={M\bibinitperiod\bibinitdelim V\bibinitperiod}}}%
+        {{hash=a91b1abc31d0133742404fa170dfdeeb}{%
+           family={Boyd},
+           familyi={B\bibinitperiod},
+           given={Nathan\bibnamedelima S.},
+           giveni={N\bibinitperiod\bibinitdelim S\bibinitperiod}}}%
+        {{hash=4fcd81a2eee60f83eb04ebdaf2d8c3f5}{%
+           family={Walsh},
+           familyi={W\bibinitperiod},
+           given={Michael\bibnamedelima J.},
+           giveni={M\bibinitperiod\bibinitdelim J\bibinitperiod}}}%
+      }
+      \strng{namehash}{9027c706b627b957211f75b55c7899ca}
+      \strng{fullhash}{585da3c9e80d836999c1fdbd858b74ac}
+      \strng{fullhashraw}{585da3c9e80d836999c1fdbd858b74ac}
+      \strng{bibnamehash}{9027c706b627b957211f75b55c7899ca}
+      \strng{authorbibnamehash}{9027c706b627b957211f75b55c7899ca}
+      \strng{authornamehash}{9027c706b627b957211f75b55c7899ca}
+      \strng{authorfullhash}{585da3c9e80d836999c1fdbd858b74ac}
+      \strng{authorfullhashraw}{585da3c9e80d836999c1fdbd858b74ac}
+      \field{sortinit}{4}
+      \field{sortinithash}{9381316451d1b9788675a07e972a12a7}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Weed Technology}
+      \field{number}{6}
+      \field{title}{Weed detection to weed recognition: reviewing 50 years of research to identify constraints and opportunities for large-scale cropping systems}
+      \field{volume}{36}
+      \field{year}{2022}
+      \field{pages}{741\bibrangedash 757}
+      \range{pages}{17}
+      \verb{doi}
+      \verb 10.1017/wet.2022.84
+      \endverb
+    \endentry
+    \entry{FUKUSHIMA1988119}{article}{}{}
+      \name{author}{1}{}{%
+        {{hash=23d96062ed18321873ac4b8b6e2fc816}{%
+           family={Fukushima},
+           familyi={F\bibinitperiod},
+           given={Kunihiko},
+           giveni={K\bibinitperiod}}}%
+      }
+      \strng{namehash}{23d96062ed18321873ac4b8b6e2fc816}
+      \strng{fullhash}{23d96062ed18321873ac4b8b6e2fc816}
+      \strng{fullhashraw}{23d96062ed18321873ac4b8b6e2fc816}
+      \strng{bibnamehash}{23d96062ed18321873ac4b8b6e2fc816}
+      \strng{authorbibnamehash}{23d96062ed18321873ac4b8b6e2fc816}
+      \strng{authornamehash}{23d96062ed18321873ac4b8b6e2fc816}
+      \strng{authorfullhash}{23d96062ed18321873ac4b8b6e2fc816}
+      \strng{authorfullhashraw}{23d96062ed18321873ac4b8b6e2fc816}
+      \field{sortinit}{5}
+      \field{sortinithash}{20e9b4b0b173788c5dace24730f47d8c}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{issn}{0893-6080}
+      \field{journaltitle}{Neural Networks}
+      \field{number}{2}
+      \field{title}{Neocognitron: A hierarchical neural network capable of visual pattern recognition}
+      \field{volume}{1}
+      \field{year}{1988}
+      \field{pages}{119\bibrangedash 130}
+      \range{pages}{12}
+      \verb{doi}
+      \verb https://doi.org/10.1016/0893-6080(88)90014-7
+      \endverb
+      \verb{urlraw}
+      \verb https://www.sciencedirect.com/science/article/pii/0893608088900147
+      \endverb
+      \verb{url}
+      \verb https://www.sciencedirect.com/science/article/pii/0893608088900147
+      \endverb
+    \endentry
+    \entry{ACKLEY1985147}{article}{}{}
+      \name{author}{3}{}{%
+        {{hash=d75e80fc3f251b0d87ace30e48140f35}{%
+           family={Ackley},
+           familyi={A\bibinitperiod},
+           given={David\bibnamedelima H.},
+           giveni={D\bibinitperiod\bibinitdelim H\bibinitperiod}}}%
+        {{hash=813bd95fe553e6079cd53a567b238287}{%
+           family={Hinton},
+           familyi={H\bibinitperiod},
+           given={Geoffrey\bibnamedelima E.},
+           giveni={G\bibinitperiod\bibinitdelim E\bibinitperiod}}}%
+        {{hash=2df660039cf6a702dffb22b64106829f}{%
+           family={Sejnowski},
+           familyi={S\bibinitperiod},
+           given={Terrence\bibnamedelima J.},
+           giveni={T\bibinitperiod\bibinitdelim J\bibinitperiod}}}%
+      }
+      \strng{namehash}{acb76e6370607be3abc34d205115de33}
+      \strng{fullhash}{3bec7e9a6f8b0ff103785ca67fc3866c}
+      \strng{fullhashraw}{3bec7e9a6f8b0ff103785ca67fc3866c}
+      \strng{bibnamehash}{3bec7e9a6f8b0ff103785ca67fc3866c}
+      \strng{authorbibnamehash}{3bec7e9a6f8b0ff103785ca67fc3866c}
+      \strng{authornamehash}{acb76e6370607be3abc34d205115de33}
+      \strng{authorfullhash}{3bec7e9a6f8b0ff103785ca67fc3866c}
+      \strng{authorfullhashraw}{3bec7e9a6f8b0ff103785ca67fc3866c}
+      \field{sortinit}{6}
+      \field{sortinithash}{b33bc299efb3c36abec520a4c896a66d}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{issn}{0364-0213}
+      \field{journaltitle}{Cognitive Science}
+      \field{number}{1}
+      \field{title}{A learning algorithm for boltzmann machines}
+      \field{volume}{9}
+      \field{year}{1985}
+      \field{pages}{147\bibrangedash 169}
+      \range{pages}{23}
+      \verb{doi}
+      \verb https://doi.org/10.1016/S0364-0213(85)80012-4
+      \endverb
+      \verb{urlraw}
+      \verb https://www.sciencedirect.com/science/article/pii/S0364021385800124
+      \endverb
+      \verb{url}
+      \verb https://www.sciencedirect.com/science/article/pii/S0364021385800124
+      \endverb
+    \endentry
+    \entry{Lecun98}{article}{}{}
+      \name{author}{4}{}{%
+        {{hash=d0ab8cbca75df7aa3e0b6024d60ac5f8}{%
+           family={Lecun},
+           familyi={L\bibinitperiod},
+           given={Yann},
+           giveni={Y\bibinitperiod}}}%
+        {{hash=179581647e37c19b9a3deb51a1cfc5b0}{%
+           family={Bottou},
+           familyi={B\bibinitperiod},
+           given={Leon},
+           giveni={L\bibinitperiod}}}%
+        {{hash=419350ebbeb4eba5351469f378dee007}{%
+           family={Bengio},
+           familyi={B\bibinitperiod},
+           given={Y.},
+           giveni={Y\bibinitperiod}}}%
+        {{hash=844e183692f08a63f99285330fcf90cc}{%
+           family={Haffner},
+           familyi={H\bibinitperiod},
+           given={Patrick},
+           giveni={P\bibinitperiod}}}%
+      }
+      \strng{namehash}{f7ce6caf843f284e299ac4d8b37d6357}
+      \strng{fullhash}{246257fe4a9859b197d1cfe8f2d4df71}
+      \strng{fullhashraw}{246257fe4a9859b197d1cfe8f2d4df71}
+      \strng{bibnamehash}{246257fe4a9859b197d1cfe8f2d4df71}
+      \strng{authorbibnamehash}{246257fe4a9859b197d1cfe8f2d4df71}
+      \strng{authornamehash}{f7ce6caf843f284e299ac4d8b37d6357}
+      \strng{authorfullhash}{246257fe4a9859b197d1cfe8f2d4df71}
+      \strng{authorfullhashraw}{246257fe4a9859b197d1cfe8f2d4df71}
+      \field{sortinit}{7}
+      \field{sortinithash}{108d0be1b1bee9773a1173443802c0a3}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Proceedings of the IEEE}
+      \field{month}{12}
+      \field{title}{Gradient-Based Learning Applied to Document Recognition}
+      \field{volume}{86}
+      \field{year}{1998}
+      \field{pages}{2278\bibrangedash 2324}
+      \range{pages}{47}
+      \verb{doi}
+      \verb 10.1109/5.726791
+      \endverb
+    \endentry
+    \entry{Alex2012}{article}{}{}
+      \name{author}{3}{}{%
+        {{hash=c5e3a676e2ac1164b3afcd539c131fc9}{%
+           family={Krizhevsky},
+           familyi={K\bibinitperiod},
+           given={Alex},
+           giveni={A\bibinitperiod}}}%
+        {{hash=8d569d1d5b8b5a7836017a98b430f959}{%
+           family={Sutskever},
+           familyi={S\bibinitperiod},
+           given={Ilya},
+           giveni={I\bibinitperiod}}}%
+        {{hash=9a8750ccdb2a4cf14d2655face1ce016}{%
+           family={Hinton},
+           familyi={H\bibinitperiod},
+           given={Geoffrey},
+           giveni={G\bibinitperiod}}}%
+      }
+      \strng{namehash}{dd291871bfa8ee64447232f1cca429aa}
+      \strng{fullhash}{e7b9ce2282d123f3a75ab23afec17231}
+      \strng{fullhashraw}{e7b9ce2282d123f3a75ab23afec17231}
+      \strng{bibnamehash}{e7b9ce2282d123f3a75ab23afec17231}
+      \strng{authorbibnamehash}{e7b9ce2282d123f3a75ab23afec17231}
+      \strng{authornamehash}{dd291871bfa8ee64447232f1cca429aa}
+      \strng{authorfullhash}{e7b9ce2282d123f3a75ab23afec17231}
+      \strng{authorfullhashraw}{e7b9ce2282d123f3a75ab23afec17231}
+      \field{sortinit}{8}
+      \field{sortinithash}{a231b008ebf0ecbe0b4d96dcc159445f}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Neural Information Processing Systems}
+      \field{month}{01}
+      \field{title}{ImageNet Classification with Deep Convolutional Neural Networks}
+      \field{volume}{25}
+      \field{year}{2012}
+      \verb{doi}
+      \verb 10.1145/3065386
+      \endverb
+    \endentry
+    \entry{Kaiming2015}{article}{}{}
+      \name{author}{4}{}{%
+        {{hash=6b4b60e909e78633945f3f9c9dc83e01}{%
+           family={He},
+           familyi={H\bibinitperiod},
+           given={Kaiming},
+           giveni={K\bibinitperiod}}}%
+        {{hash=5e72bc22dbcf0984c6d113d280e36990}{%
+           family={Zhang},
+           familyi={Z\bibinitperiod},
+           given={Xiangyu},
+           giveni={X\bibinitperiod}}}%
+        {{hash=bb295293acacd54387339079ebbe4ead}{%
+           family={Ren},
+           familyi={R\bibinitperiod},
+           given={Shaoqing},
+           giveni={S\bibinitperiod}}}%
+        {{hash=f85751488058842b5777c7b4074077b5}{%
+           family={Sun},
+           familyi={S\bibinitperiod},
+           given={Jian},
+           giveni={J\bibinitperiod}}}%
+      }
+      \strng{namehash}{6edb98fe38401d2fe4a026f5ce6e8451}
+      \strng{fullhash}{42c4b52dc3a62cebabbc11c73e1afb53}
+      \strng{fullhashraw}{42c4b52dc3a62cebabbc11c73e1afb53}
+      \strng{bibnamehash}{42c4b52dc3a62cebabbc11c73e1afb53}
+      \strng{authorbibnamehash}{42c4b52dc3a62cebabbc11c73e1afb53}
+      \strng{authornamehash}{6edb98fe38401d2fe4a026f5ce6e8451}
+      \strng{authorfullhash}{42c4b52dc3a62cebabbc11c73e1afb53}
+      \strng{authorfullhashraw}{42c4b52dc3a62cebabbc11c73e1afb53}
+      \field{sortinit}{9}
+      \field{sortinithash}{0a5ebc79d83c96b6579069544c73c7d4}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{month}{12}
+      \field{title}{Deep Residual Learning for Image Recognition}
+      \field{volume}{7}
+      \field{year}{2015}
+    \endentry
+    \entry{Quinones2025}{article}{}{}
+      \name{author}{4}{}{%
+        {{hash=6c8ce8d489077a9668731d03b8fbed3e}{%
+           family={Quinones},
+           familyi={Q\bibinitperiod},
+           given={Amparo},
+           giveni={A\bibinitperiod}}}%
+        {{hash=9148c808f4787b0a909b1ff8a8354ae9}{%
+           family={Savian},
+           familyi={S\bibinitperiod},
+           given={Jean\bibnamedelima V.},
+           giveni={J\bibinitperiod\bibinitdelim V\bibinitperiod}}}%
+        {{hash=cfba48f35bf86fee650b68cc0f7fb354}{%
+           family={Hirigoyen},
+           familyi={H\bibinitperiod},
+           given={Andres},
+           giveni={A\bibinitperiod}}}%
+        {{hash=90bd077990a41017864bc2cfd201b182}{%
+           family={Valente},
+           familyi={V\bibinitperiod},
+           given={Joao},
+           giveni={J\bibinitperiod}}}%
+      }
+      \strng{namehash}{5b9d0074b71247083ba565f9a2fcb63f}
+      \strng{fullhash}{52eb7fe7a4c685231240db80f34f29ed}
+      \strng{fullhashraw}{52eb7fe7a4c685231240db80f34f29ed}
+      \strng{bibnamehash}{52eb7fe7a4c685231240db80f34f29ed}
+      \strng{authorbibnamehash}{52eb7fe7a4c685231240db80f34f29ed}
+      \strng{authornamehash}{5b9d0074b71247083ba565f9a2fcb63f}
+      \strng{authorfullhash}{52eb7fe7a4c685231240db80f34f29ed}
+      \strng{authorfullhashraw}{52eb7fe7a4c685231240db80f34f29ed}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{title}{Towards Improved Weed Detection in Native Grasslands Using High-Resolution Drone Imagery and Artificial Intelligence}
+      \field{year}{2025}
+    \endentry
+  \enddatalist
+\endrefsection
+\endinput
+
