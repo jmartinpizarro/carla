@@ -488,10 +488,75 @@ From this technical review, several questions arise:
 
 \section{State of Art: An introduction to Object Detection and Segmentation}
 
-\subsection{Asociation Algorithms}
+\subsection{Associations Algorithms}
 \label{subsec:asoc_algorithm}
 
 \section{Regulatory Framework}
+
+\subsection{European Regulatory Framework}
+
+The regulatory framework about these emerging technologies --- such as AI and UAVs --- are still being defined worlwide. In the European Union, several laws about the usage of AI and UAVs have been already defined for the correct usage of both technologies. 
+
+\subsubsection{European Regulatory Framework of UAVs}
+
+Unmanned Aerial Vehicles regulatory framework started to develop in the early 2020s, with the approval of the Implementing Regulation (UE) 2019/947, which defines the rules and procedures for the usage of drones in european aerial space and the Implementing Regulation (UE) 2018/1139, which integrated the drone normative with the European Union Aviation safety Agency (EASA).
+
+One of the most important points of this regulation is the classification of the drones: \textit{open}, \textit{specific} or \textit{certified}, which depends on several factors such as the danger of the mission and the capabilities of the vehicle. Depending on the category of the vehicle, different requirements may be needed (for the pilot and the plane) to fly in european space.
+
+\begin{enumerate}
+	\item \textbf{Open}: \textit{low danger operations}. Most are recreational or simple comercial flights. No previous authorization is required is the drone follows several requirements: weight does not surpass 25 kg, maximum flight altitude is 125 meters high and the vehicle will not approach any vital infraestructure (such as airports). The pilot must have constantly visual sight of the vehicle.
+	\item \textbf{Specific}: \textit{medium danger operations}. In this category, flights required to have a previous authorization of the corresponding authorities (AESA in Spain). However, the limitations of these flights are less restricted than in the open category: night operations, increase size and weight of the vehicle and the posibility of flying in urban zones.
+	\item \textbf{Certified}: \textit{high danger operations}. Compared to traditional aviation operations. This category includes vehicles that transports passengers or dangerous commodities or that used autonomous flights without any possible human interaction. Currently, there are very few operations that are currently in the need of this category; it is aimed for future projects.
+\end{enumerate}
+
+In addition, the law in Spain (and thus in the entire European Union) requires that every drone pilot must be certified with a license, obtaining an unique identity number valid in the entire European Union.
+
+This work aims to contribute to the open and specific categories. Here, individual such as farmers or researchers may be in the need of using drones for recognising and identifying weeds in their fields. 
+
+However, these services can be also done through a company specialized in this. The pilots the company must be certified pilots as well. And because of the high amount of flights per week that these pilots may need to do, exists the \textbf{Light UAS Operator Certificate} (LUC) for frequent operators. These operators do not need to ask for previous authorization to AESA, reducing the bureocracy and speeding up the process of asking for authorization, which can last up to ten working days. 
+
+\subsubsection{European Regulatory Framework of Artificial Intelligence}
+
+In 2024 the European Union adopted the first worldwide normative with respect to artificial intelligence: the reglament (UE) 2024/1689, also known as the Law of Artificial Intelligence or AI Act. It is defined as a machine-based system designed to operate between different levels of autonomy. 
+
+The AI Act introduces a well-defined categorization of risk for AI systems. Depending on the risk category, some systems are forbidden, whereas others may require and extensive assessment before market entry.
+
+\begin{itemize}
+	
+	\item \textbf{Unacceptable risk}: applications such as social scoring systems and manipulative technologies are absolutely banned in the EU. 
+	\item \textbf{High risk}: applications based on risk evaluation (such as risk or infraestructure) must pass strict compliance reviews.
+	\item \textbf{Limited risk}: limited applications such as recommender systems, image or video processing and more need to clarify to the user its usage and the usage of AI for generating the output. Data quality, transparency and fairness standards are required even for these types of applications  
+	\item \textbf{Minimal risk}: spam filters or or AI in video games fall in this category. They are not subjected to any regulatory framework.
+
+\end{itemize}
+
+The work proposed in this document clearly falls into the \textit{limited risk} category. Thus, it is important to remark that transparency and fairness are vital. This is because the output of an AI model could cause confussion or influence decision-making capabilities of the user. 
+
+Several mininmal obligations are required to these systems for the sake of the protection of the user:
+
+\begin{itemize}
+	\item User must always know that is using AI.
+	\item Artificially generated contents must be labeled as "AI Generated" in order to avoid confusion or wiles.
+	\item A transparent design means a less biased model.
+	\item It is recommended to include ethics by design. This can be done by evaluating biases during training or applying \textit{algorithmical justice}
+\end{itemize}
+
+The AI Act also mentions that the systems must be explainable (explainable AI - XAI). The goal of XAI is quite ambitious: surpassing the black box issue and integrating algorithms with human values, empowering and enhancing the individual in the decision-making process \cite{ALI2023101805}. 
+
+
+\subsubsection{European Regulatory Framework of Personal Data and Privacy}
+
+In Europe, every use of personal data needs to follow the privacy policy established by the European Union; more specifically the GDPR --- General Data Protection Regulation --- which its effective date was 2018. 
+
+\subsection{Regulatory Framework in Hispanic America}
+
+However, in the region of South America (were this work aims to be relevant) different specific laws have been approved in order to regulate these topics, specially about \textbf{data protection and privacy and about the usage of drones}.
+
+Regulations about UAVs are highly strict. Civil unmanned aircrafts (such as those used for monitoring or research) cannot surpass an altitude limit of 122 meters and a maximum velocity of 161 km/h \cite{Sanchez23}. Although these laws are not really well defined in the continent, Brazil and Argentina are the exceptions; with more than seventy articles and laws defining limits and certifications depending on the capabilities and weights of the drones.
+
+On the other hand, the law in Uruguay is more salmon: for sports or recreation flights it is not required to ask for a flight permit from the goverment.
+
+Image and video capture and usage is highly regulated due to the data and privacy policies of each country, specially when it involves images of people.
 
 \section{Socio-economic impact}
 
