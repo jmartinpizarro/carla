@@ -1,0 +1,1 @@
+yolo detect train data=data/v2_yolo/data.yaml model=yolo11s.pt epochs=60 imgsz=640 cache=True batch=2
