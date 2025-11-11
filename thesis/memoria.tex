@@ -541,22 +541,68 @@ Several mininmal obligations are required to these systems for the sake of the p
 	\item It is recommended to include ethics by design. This can be done by evaluating biases during training or applying \textit{algorithmical justice}
 \end{itemize}
 
-The AI Act also mentions that the systems must be explainable (explainable AI - XAI). The goal of XAI is quite ambitious: surpassing the black box issue and integrating algorithms with human values, empowering and enhancing the individual in the decision-making process \cite{ALI2023101805}. 
+The AI Act also mentions that the systems must be explainable (XAI). The goal of XAI is quite ambitious: surpassing the black box issue and integrating algorithms with human values, empowering and enhancing the individual in the decision-making process \cite{ALI2023101805}. 
 
 
 \subsubsection{European Regulatory Framework of Personal Data and Privacy}
 
 In Europe, every use of personal data needs to follow the privacy policy established by the European Union; more specifically the GDPR --- General Data Protection Regulation --- which its effective date was 2018. 
 
+The GDPR imposes some fundamental principles about the usage of data, which can be used in AI proyects. These principles are based on transparency, loyalty and legality. Moreover, a limitation must be setted for the usage of the data in order to prevent a misuse of it.
+
+Furthermore, the data must be stored following the principles of integrity and confidentiality up to an arbitrary number of years defined during the process of collection.
+
+One relevant change that of the GDPR is that the population has rights about its own data: they have the right to access, change, remove or oppose to their usage in some applications. This means that every institution that automates processes using AI must be transparent about their usage and how it arrive to the conclusion given, which again bring us to XAI (eXplainable AI).
+
+It is important to mention that the GDPR and AI Act were created to coexist: if an institution want to apply a service using AI, it must subjected to both the AI Act and the GDPR. 
+
 \subsection{Regulatory Framework in Hispanic America}
 
-However, in the region of South America (were this work aims to be relevant) different specific laws have been approved in order to regulate these topics, specially about \textbf{data protection and privacy and about the usage of drones}.
+In contrast to the European Union’s harmonized legal ecosystem, Hispanoamerica presents a more fragmented regulatory landscape regarding artificial intelligence, data privacy, and UAV (drone) operations. However, several countries have made considerable advances toward regulating these technologies, particularly in the areas of \textbf{data protection} and \textbf{civil aviation}.
 
-Regulations about UAVs are highly strict. Civil unmanned aircrafts (such as those used for monitoring or research) cannot surpass an altitude limit of 122 meters and a maximum velocity of 161 km/h \cite{Sanchez23}. Although these laws are not really well defined in the continent, Brazil and Argentina are the exceptions; with more than seventy articles and laws defining limits and certifications depending on the capabilities and weights of the drones.
+\subsubsection{Data Protection and Privacy Laws}
 
-On the other hand, the law in Uruguay is more salmon: for sports or recreation flights it is not required to ask for a flight permit from the goverment.
+Many Hispanoamerican countries have enacted specific laws to regulate the collection, processing, and use of personal data, largely inspired by international frameworks such as the EU's GDPR. 
 
-Image and video capture and usage is highly regulated due to the data and privacy policies of each country, specially when it involves images of people.
+\begin{itemize}
+    \item \textbf{Brazil} enacted the \textit{Lei Geral de Proteção de Dados} (LGPD - Law No. 13.709/2018), a comprehensive data protection law closely modeled after the GDPR, which applies to both public and private sector data handling. It includes principles such as consent, purpose limitation, data minimization, and accountability, and is enforced by the national authority ANPD.
+    
+    \item \textbf{Argentina} was a pioneer with its Data Protection Law 25.326, which regulates personal data processing and guarantees data subject rights. The law also prohibits the dissemination of image or video data containing identifiable individuals without prior consent.
+    
+    \item \textbf{Chile}, \textbf{Mexico}, and \textbf{Uruguay} have similar legislative frameworks, each including provisions that require informed consent, secure data processing, and individuals’ right to access or correct their data. In Uruguay, the Law 18.331 governs personal data protection and is overseen by the Unidad Reguladora y de Control de Datos Personales (URCDP).
+\end{itemize}
+
+These national frameworks establish that any AI or drone-based system capturing or processing images, biometrics, or location data must comply with consent and purpose principles. This significantly affects agricultural or surveillance applications involving UAVs or computer vision.
+
+\subsubsection{AI-Specific Legislative Developments}
+
+Unlike the EU’s AI Act, Hispanoamerica does not yet have unified legislation targeting artificial intelligence. Nevertheless, several countries have launched national AI strategies and draft bills focused on ethical guidelines, transparency, and fostering innovation.
+
+\begin{itemize}
+    \item \textbf{Brazil} released its \textit{Estratégia Brasileira de IA} (2021), outlining policy objectives including responsible AI, scientific research, and AI in public services. A federal AI Bill was proposed in 2022 and is under parliamentary discussion.
+    
+    \item \textbf{Chile} introduced its National AI Policy in 2021, emphasizing development based on human rights, inclusion, and explainability.
+    
+    \item \textbf{Argentina}, \textbf{Colombia}, and \textbf{Uruguay} are also developing their national frameworks, supported by regional cooperation through organizations like CEPAL and the IADB.
+\end{itemize}
+
+Though still in progress, these initiatives aim to provide a regulatory basis for ethical AI deployment in agriculture, education, and digital public infrastructure.
+
+\subsubsection{UAV and Drone Legislation}
+
+Drone regulations in Hispanoamerica vary considerably by country. However, civil aviation authorities generally restrict operational parameters such as maximum altitude, speed, and flight over populated areas.
+
+\begin{itemize}
+    \item In \textbf{Brazil}, the National Civil Aviation Agency (ANAC) regulates UAVs through RBAC-E94, which establishes over 70 provisions for certification, weight categories, and operation types. Drones used for commercial, agricultural, or research purposes require operator registration, flight authorization, and in some cases, insurance.
+
+    \item \textbf{Argentina} maintains similar strict controls, requiring UAV registration, operator licenses, and compliance with maximum altitude (120 m) and speed (161 km/h) limits \cite{Sanchez23}.
+
+    \item In contrast, \textbf{Uruguay} has a more permissive regime for recreational drones: no formal permit is required for sport or leisure flights, provided that basic safety measures are followed and no sensitive areas are overflown.
+
+    \item Countries such as \textbf{Colombia}, \textbf{Peru}, and \textbf{Mexico} follow hybrid approaches based on international aviation safety standards, including pilot certification and risk assessment for advanced operations (e.g., BVLOS, agricultural spraying).
+\end{itemize}
+
+Overall, while regulation is less standardized than in Europe, most Hispanoamerican countries are actively updating their frameworks to address UAV usage, particularly as drone-based AI systems become more prevalent in agriculture, infrastructure monitoring, and environmental surveillance.
 
 \section{Socio-economic impact}
 
