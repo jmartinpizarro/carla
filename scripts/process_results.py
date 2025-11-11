@@ -13,12 +13,24 @@ from scipy.optimize import linear_sum_assignment
 
 def get_args():
     parser = argparse.ArgumentParser(description='T-Rex2 Results Renderer')
-    parser.add_argument('--predictions', required=True, type=str,
-                        help='Path to T-Rex predictions JSON (trex_predictions.json)')
-    parser.add_argument('--labels', required=True, type=str,
-                        help='Path to ground-truth COCO annotations JSON')
-    parser.add_argument('--iou-thr', type=float, default=0.5,
-                        help='IoU threshold for matching boxes (default=0.5)')
+    parser.add_argument(
+        '--predictions',
+        required=True,
+        type=str,
+        help='Path to T-Rex predictions JSON (trex_predictions.json)',
+    )
+    parser.add_argument(
+        '--labels',
+        required=True,
+        type=str,
+        help='Path to ground-truth COCO annotations JSON',
+    )
+    parser.add_argument(
+        '--iou-thr',
+        type=float,
+        default=0.5,
+        help='IoU threshold for matching boxes (default=0.5)',
+    )
     return parser.parse_args()
 
 
@@ -61,9 +73,9 @@ def match_boxes(gt_boxes, pred_boxes, iou_thr=0.5):
     TP = len(matches)
     FP = len(pred_boxes) - TP
     FN = len(gt_boxes) - TP
-    
+
     if TP > 0:
-            mean_iou = np.mean([iou_matrix[g, p] for g, p in matches])
+        mean_iou = np.mean([iou_matrix[g, p] for g, p in matches])
     else:
         mean_iou = None
     return mean_iou, TP, FP, FN
@@ -77,32 +89,40 @@ def main():
     with open(args.labels) as f:
         labels = json.load(f)
 
-    image_map = {img["file_name"]: img["id"] for img in labels["images"]}
-    gt_ann = labels["annotations"]
+    image_map = {img['file_name']: img['id'] for img in labels['images']}
+    gt_ann = labels['annotations']
 
     results = []
     total_iou, total_tp, total_fp, total_fn = [], 0, 0, 0
 
     for img_name, pred_data in preds.items():
-        if pred_data == "-1" or not pred_data:
+        if pred_data == '-1' or not pred_data:
             continue
 
         # ground-truth boxes
         img_id = image_map.get(img_name)
-        gt_boxes = [a["bbox"] for a in gt_ann if a["image_id"] == img_id]
+        gt_boxes = [a['bbox'] for a in gt_ann if a['image_id'] == img_id]
 
         # predicted boxes (T-Rex outputs x1,y1,x2,y2)
         try:
-            pred_boxes_raw = [p["bbox"] for p in pred_data["data"]["result"]["objects"]]
+            pred_boxes_raw = [
+                p['bbox'] for p in pred_data['data']['result']['objects']
+            ]
             # Convert [x1,y1,x2,y2] → [x,y,w,h]
-            pred_boxes = [[x1, y1, x2 - x1, y2 - y1] for x1, y1, x2, y2 in pred_boxes_raw]
-            pred_scores = [p["score"] for p in pred_data["data"]["result"]["objects"]]
+            pred_boxes = [
+                [x1, y1, x2 - x1, y2 - y1] for x1, y1, x2, y2 in pred_boxes_raw
+            ]
+            pred_scores = [
+                p['score'] for p in pred_data['data']['result']['objects']
+            ]
         except Exception:
             pred_boxes, pred_scores = [], []
 
         iou, TP, FP, FN = match_boxes(gt_boxes, pred_boxes, args.iou_thr)
-        results.append({"image": img_name, "IOU": iou, "TP": TP, "FP": FP, "FN": FN})
-        
+        results.append(
+            {'image': img_name, 'IOU': iou, 'TP': TP, 'FP': FP, 'FN': FN}
+        )
+
         if iou is not None:
             total_iou.append(iou)
         total_tp += TP
@@ -117,15 +137,15 @@ def main():
 
     df = pd.DataFrame(results)
     print(df.head())
-    print("\n=== Global metrics ===")
-    print(f"Precision: {precision:.3f}")
-    print(f"Recall:    {recall:.3f}")
-    print(f"F1-score:  {f1:.3f}")
-    print(f"Average IoU (Intersection over Union): {iou:.3f}\n")
+    print('\n=== Global metrics ===')
+    print(f'Precision: {precision:.3f}')
+    print(f'Recall:    {recall:.3f}')
+    print(f'F1-score:  {f1:.3f}')
+    print(f'Average IoU (Intersection over Union): {iou:.3f}\n')
 
-    out_path = os.path.splitext(args.predictions)[0] + "_metrics.csv"
+    out_path = os.path.splitext(args.predictions)[0] + '_metrics.csv'
     df.to_csv(out_path, index=False)
-    print(f"\nPer-image results saved to {out_path}")
+    print(f'\nPer-image results saved to {out_path}')
 
 
 if __name__ == '__main__':

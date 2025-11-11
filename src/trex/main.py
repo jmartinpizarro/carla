@@ -47,9 +47,10 @@ def get_args():
 
     return parser.parse_args()
 
+
 def main():
     args = get_args()
-    
+
     os.makedirs(args.output_dir, exist_ok=True)
 
     print(
@@ -72,7 +73,7 @@ def main():
     # asume data will be always follow the COCO format
     # as the input dir can be dynamic (v1,v2,...,vn) is better to take it
     # into consideration from the arguments
-    annotations_file = os.path.join(args.input_dir,'_annotations.coco.json')
+    annotations_file = os.path.join(args.input_dir, '_annotations.coco.json')
 
     with open(annotations_file, 'r') as _f:
         labels = json.load(_f)
@@ -98,7 +99,7 @@ def main():
                 labels['annotations'],
             )
         )
-        
+
         # trex only processes rect and the bbox of it. Other thing will suppose an error
         helper_boxes = [b for b in helper_boxes if 'bbox' in b]
 
@@ -107,7 +108,9 @@ def main():
         for box in helper_boxes:
             box_copy = box.copy()  # copy dict
             box_copy['type'] = 'rect'
-            box_copy['rect'] = box_copy['bbox']  # don't use pop, can cause error
+            box_copy['rect'] = box_copy[
+                'bbox'
+            ]  # don't use pop, can cause error
             del box_copy['bbox']  # this is optional
             helper_boxes_copy.append(box_copy)
 
@@ -132,7 +135,7 @@ def main():
             json=parameters,  # parameters
             headers=headers,
             timeout=60,
-            verify=True
+            verify=True,
         )
 
         json_resp = resp.json()
