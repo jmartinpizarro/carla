@@ -207,6 +207,7 @@ marimo/_lsp/
 __marimo__/
 
 data/
+runs/
 
 # latex compilation shit
 *.aux
@@ -222,3 +223,6 @@ data/
 *.gz
 *.fdb*
 *.fls
+
+# pytorch models
+*.pt
