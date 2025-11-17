@@ -18,19 +18,15 @@ def get_args():
 
 training_space = {
     "model": [
-        "yolov5su.pt",
-        "yolov5lu.pt",
         "yolov8s.pt",
-        "yolov8m.pt",
-        "yolov11s.pt",
-        "yolov11l.pt",
+        "yolov8l.pt",
+        "yolo11s.pt",
+        "yolo11l.pt",
     ],
-    "epochs": [50, 75, 100],
-    "batch": [8, 16, 32],
-    "imgsz": [640, 1280],
-    "optimizer": ['auto', 'AdamW'],
+    "epochs": [60, 100],
+    "batch": [16, 32],
     "seed": [42],
-    "box": [5.0, 7.5, 10.0],
+    "box": [7.5, 10.0],
 }
 
 def grid_search(space):
@@ -48,7 +44,7 @@ def run_training(config, data, outdir):
 
     exp_name = (
         f"{model_name}_e{config['epochs']}_b{config['batch']}_"
-        f"s{config['seed']}_img{config['imgsz']}_box{config['box']}_{exp_id}"
+        f"s{config['seed']}_box{config['box']}_{exp_id}"
     )
 
     print(f"\n[train_yolo.py] :: Starting experiment: {exp_name}")
@@ -60,8 +56,8 @@ def run_training(config, data, outdir):
         f"data={data}",
         f"epochs={config['epochs']}",
         f"batch={config['batch']}",
-        f"imgsz={config['imgsz']}",
-        f"optimizer={config['optimizer']}",
+        f"imgsz=640",
+        f"optimizer=auto",
         f"seed={config['seed']}",
         f"box={config['box']}",
         f"project={outdir}",
