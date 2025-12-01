@@ -16,6 +16,13 @@ def get_args():
     )
 
     parser.add_argument(
+        "--data",
+        default='data/yolo_v3/data.yaml',
+        type=str,
+        help="Route where the .yaml definition of the dataset for YOLO can be found."
+    )
+
+    parser.add_argument(
         '--results-folder',
         default='runs',
         type=str,
@@ -65,7 +72,7 @@ def main():
         # now it is necessary to obtain the metrics with the test set
         YOLO_MODEL = YOLO(f'{route}/weights/best.pt')
         prediction_metrics = YOLO_MODEL.val(
-            data='data/v2_yolo/data.yaml',
+            data=args.data,
             split='test',
             imgsz=640,
             half=True,
