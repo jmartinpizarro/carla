@@ -405,6 +405,7 @@ Nonetheless, the region is not the only factor, but also the seasons of the year
 Thus, the aim of this work is not only to create a model able to segment and count instances of the cardilla, but to create a dataset competent enough to provide the sufficient information for future works about the field.
 
 \subsection{About the \textit{Eryngium horridum}}
+\label{subsec:aboutEryngium}
 
 Original from Hispanic America, the \textit{Eryngium horridum} ---also known as cardilla or caraguatá--- is common to locate in the plain lands of Uruguay, southern Brazil and central-eastern Argentina.
 
@@ -666,7 +667,7 @@ Processing the videos was the first step for obtaining useful frames that could 
     {\color{myblue}\fbox{\includegraphics[width=0.95\linewidth]{imagenes/dataset/dataset_frame3.pdf}}}
 \end{minipage}
 
-\caption{A sample of some frames after processing the entirety of the videos. Notice the changes on the gymball camera angle on images b (bottom left) and c (right).}
+\caption{A sample of some frames after processing the entirety of the videos. Notice the changes on the drone orientation with respect to the ground on images b (bottom left) and c (right).}
 \end{figure}
 
 
@@ -678,11 +679,63 @@ For removing this images, it was taken into account the images previously inspec
 
 After that, a deep analysis of the images is done in order to comprenhend the nature of the problem and the structure of the dataset.
 
+\subparagraph{Environment analysis} Because of the location where the dataset was recorded, the environment is not rich in diversity. However, the cardilla can be found in Brazil, Uruguay and Argentina mainly, which share a similar conditions. 
+
+Although these arises problems that will be later discused in section \ref{subsec:dataLimits}, it is possible to assume a generalization for the region (for the moment).
+
+Deepining more into the environment, it is possible to obtain different characteristics from the images studied:
+
+\begin{itemize}
+	\item Except the cardilla, no other relevant type of plants are found out in the images. It is possible to assume that the density per hectare of other species is minimal.
+	\item It is possible to find the cardilla in two possible scenarios: 
+	\begin{itemize}
+		\item \textbf{The density is not enough to form an almost indistinguible shape made of cardillas}, being possible to count and identify them with relatively ease.
+		\item \textbf{The density is high or really high}; the plants are too near between each other and is really complicated to identify them (as you can see in image \ref{fig:cardillaDensity}).
+	\end{itemize}
+	\item The ground is almost always covered by a thin layer of green, yellow or brown grass. The dryer the soil, the browner the grass is. The density of cardillas increases in that specific region when this fact is true. Cardillas were also found in soil with yellow grass, but the quantity was infima.
+	\item Depending on the angle of the camera is easier to identify some individuals. In some cases, the closer it forms a 90º angle with respect to the ground is easier to identify the individuals. However, when the density increases too much, the complexity of the problem escalates. Frames with an angle in the range [50, 70] degrees are still required and are incredibly useful.
+\end{itemize}
+
+\begin{figure}[H]
+\centering
+
+\begin{minipage}[t]{0.49\textwidth}
+	{\color{myblue}\fbox{\includegraphics[width=0.98\linewidth]{imagenes/dataset/cardilla_high_density.pdf}}}
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.49\textwidth}
+	{\color{myblue}\fbox{\includegraphics[width=0.98\linewidth]{imagenes/dataset/cardilla_low_med_density.pdf}}}
+\end{minipage}
+\caption{Cardilla density examples: high density (left) and low-to-medium density (right). As the density increases, the soil gets darker, whereas when the density is lower it is possible to see green grass.}
+\label{fig:cardillaDensity}
+\end{figure}
+
+After this research, it is confirmed that different densities can be found of these type of weed, directly affecting the environment, avoiding the appereance of other species in the designated region. This is important to take into account, as no other possible plant species were identified during this process.
+
+Furthermore, it is important to take into consideration the density of the weed in certain region, as it was previously mentioned. The human capacity of detecting the weeds is limited and that affects directly the labelling (see paragraph \ref{par:imageLabelling}) used for the model to be trained. Only perfect instances will be annotated to reduce overfitting or possible errors.
+
+
+\subparagraph{Plant analysis} An aerial analysis of the plant is also done in order to know how to correctly label instances of it. For a more precise analysis of the plant, please refer to the subsection \ref{subsec:aboutEryngium}, as it contains an extense explication about its main characteristics.
+
+From an aerial perspective, the cardilla can be identified from two different angles: forming an angle in the range [50, 70] degrees with respect to the ground or forming an angle close to 90 degres with respect to the ground. Both points of view are valid and give important information about the individuals of the specific region, but limitations need to be considered.
+
+Depends on the ground and the context, but usually the weed has clear shape, circular with leaves rooting from the origin of it. Leaves are usually greener in the inner part (the closer to the center) whereas the parts near the end of the leaves are drier, being browner or grey. This is vital, as makes it easier to identify them with respect to the soil.
+
+However, smaller individuals can be entirely green, making the previous method for identification invalid and hard to use. For those, it is important to consider the circular shape of the leaves and, if possible, the height of the plant.
+
+With frames in the range of [50, 70] degrees with respect to the ground it is relatively easy to identify the biggest specimens as it stands out the individual. Notice that these weeds can be up to 2 meters tall if the stem is considered.
+
+The biggest specimens are easy to identify: the stem is easily distinguish. Although its great size, the cardilla is vividly green with respect to the other cardillas previously mentioned.
+
+\textbf{IMAGES WITH DIFFERENT INDIVIDUALS}
+
 \paragraph{Image Labelling}
+\label{par:imageLabelling}
 
 This is the most time-consuming part of the dataset creation.
 
 \subsection{Limitations of the dataset}
+\label{subsec:dataLimits}
 
 At the current date of writing this document (\today), the dataset is not perfect. In fact, it has several limitations that affect directly to the performance of the current models:
 
@@ -691,7 +744,8 @@ At the current date of writing this document (\today), the dataset is not perfec
 	\item Reduced sample size. With 170 images, the variety of the images is limited to the environment subject to study. Furthermore, the terrain may differ between other location (can be darker or lighter), directly affecting to the metrics of the model.
 \end{itemize}
 
-% Start writing here----------------------------------------------------
+
+
 \chapter{Models}
 \section{T-Rex 2}
 \begin{itemize}
