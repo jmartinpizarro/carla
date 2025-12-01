@@ -197,6 +197,11 @@ hmargin=3cm
 \usepackage{subcaption}
 \usepackage{booktabs}
 
+\usepackage{xcolor}
+\definecolor{myblue}{RGB}{39,123,167}
+\setlength{\fboxrule}{1pt}
+\setlength{\fboxsep}{0pt}
+
 %-------------
 %	DOCUMENT
 %-------------
@@ -391,7 +396,7 @@ $$y = F(x) + x$$
 
 Using this approach, the net eases the learning process compared to the standards of the moment. As a subsequent effect, they are able to reduce the weight of the networks up to an 80\% (compared with VGG nets).
 
-It was not until 2012 that convolutional neural networks were mature enough in order to be applied in the agriculture field. However, there have been (and still are) important limitations when using these methodologies --- which are by far the most effective---.
+It was not until 2012 that convolutional neural networks were mature enough in order to be applied in the agriculture field. However, there are important limitations when using these methodologies --- which are by far the most effective---.
 
 The main limitation is not computational or algorithmic, but the datasets used for training the nets. It is common to have a very limited dataset with very few instances of useful data to preprocess and work with. Restricted to the regions where they were obtained, it is complicated to make a dataset that is representative for an extensive region. 
 
@@ -484,6 +489,8 @@ From this technical review, several questions arise:
 	\item How do supervised models performed (DBT) compared to end-to-end transformers-based arquitectures such as T-Rex 2 (DFT)?
 	\item What are the limitations and generalization capabilities of these models when faced across different plant densities, flight altitudes, and observation perspectives?
 \end{enumerate}
+
+The source code developed for this project is publicly accessible on GitHub, baptised as CARLA --- Cardilla Recognition and Localization Analyzer \cite{repoGithub}.
 
 \section{State of Art: An introduction to Object Detection and Segmentation}
 
@@ -605,9 +612,84 @@ Overall, while regulation is less standardized than in Europe, most Hispanoameri
 
 \section{Socio-economic impact}
 
+something
+
+\section{Budget of the project}
+
+\clearpage
+
 \chapter{Dataset}
 
-Explicar características, fuentes de obtención, limitaciones y más.
+The dataset elaboration is usually the most expensive part of the project (in terms of human labour), specially when working with such a complicated problem. In this chapter, the methodologies for the data collection and the analysis of it are explained in detail, commenting the difficulties found when labelling the images and critically analizing the final result of it.
+
+\section{Data Collection Procedures}
+\label{section:dataCollectionProcedures}
+
+The collection of the entire dataset was done in the Treinta y Tres department of Uruguay (-33.253618º S, -54.503245º W in WGS84 (World Geodetic System 1984), 52 m a.s.l.). The team in charge was located at the "Palo a Pique" Research Station from the National Institute of Agricultural Research (in Spanish: Instituto Nacional de Investigación Agropecuaria).
+
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{imagenes/dataLocationObtainer.pdf}
+    \caption{Dataset collection location. The image was obtained through Google Maps.}
+    \label{fig:datasetCollectionLocation}
+\end{figure}
+
+
+For the aerial recording of the environment, the usage of a quadcopter was necessary. The aerial platform was a quadcopter, DJI Mavic Air 2, equipped with an integrated RGB sensor, model FC3170, aperture of f/2.8, exposure time of 1/500 s, and focal distance of 4 mm. The flight was made on 21 October 2024, at noon with a clear sky. The flight was scheduled on a cross-path over 0.4 ha, at 10 m altitude (this can vary depending on the frame), with 75 \% frontal and 70 \% lateral overlap, and a camera angle of 75 ° (this varies in some videos in order to obtain different angles of view from the same point) (adapted from \cite{Quinones2025}).
+
+The entire dataeset frame collection has lasted, at least, one year --- as it started on the October 22, 2024 and at the current date of writing this document (December 1, 2025) more data is currently being recorded for increasing the size of the dataset.
+
+\section{Data Analysis}
+
+This part embraces the entirety of a defined pipeline in order to incorporate the frames obtained from the videos into the dataset. The following diagram represents the pipeline followed:
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{imagenes/dataPipeline.pdf}
+    \label{fig:dataPipeline}
+\end{figure}
+
+\paragraph{Transforming the videos into useful frames}
+
+Processing the videos was the first step for obtaining useful frames that could be used to fed future models. Thus, a script was coded to process each video, obtaining $n$ frames depending on an offset $t$ (in seconds) given as a parameter. The offset acts as a separator, only returning one frame each $t$ seconds. This was done in order to obtain the highest amount possible of significant images tha may differ (slightly or very) between each other. Doing this, the dataset would have less images, but richer in quality.
+
+\begin{figure}[ht]
+\centering
+
+\begin{minipage}[t]{0.32\textwidth}
+    {\color{myblue}\fbox{\includegraphics[width=0.95\linewidth]{imagenes/dataset/dataset_frame1.pdf}}}\\[2pt]
+    {\color{myblue}\fbox{\includegraphics[width=0.95\linewidth]{imagenes/dataset/dataset_frame2.pdf}}}
+\end{minipage}%
+\hfill
+\begin{minipage}[t]{0.66\textwidth}
+    {\color{myblue}\fbox{\includegraphics[width=0.95\linewidth]{imagenes/dataset/dataset_frame3.pdf}}}
+\end{minipage}
+
+\caption{A sample of some frames after processing the entirety of the videos. Notice the changes on the gymball camera angle on images b (bottom left) and c (right).}
+\end{figure}
+
+
+\paragraph{Image Analysis} 
+
+After obtaining the frames, it is important to remove useless images or similar images, as they add noise to the training (redundant images), making it slower and can generate overfitting is the images are too similar.
+
+For removing this images, it was taken into account the images previously inspected. If the frame was too near to the timestamp of another one, it was checked in order to see if the drone did moved enough in order to consider the new frame a significant one or the image should be removed. It is important to mention that not a lot of images were needed to be removed except in one video, were the drone was almost flying statically without moving too much. From this last video a total of 70 frames were generated. From those 70 frames, only 37 were considered relevant.
+
+After that, a deep analysis of the images is done in order to comprenhend the nature of the problem and the structure of the dataset.
+
+\paragraph{Image Labelling}
+
+This is the most time-consuming part of the dataset creation.
+
+\subsection{Limitations of the dataset}
+
+At the current date of writing this document (\today), the dataset is not perfect. In fact, it has several limitations that affect directly to the performance of the current models:
+
+\begin{itemize}
+	\item Limited location variety. Due to other limitations outside this scope, the recordings were done only in the field commented in the section \ref{section:dataCollectionProcedures}. These won't allow to generalise properly to the model.
+	\item Reduced sample size. With 170 images, the variety of the images is limited to the environment subject to study. Furthermore, the terrain may differ between other location (can be darker or lighter), directly affecting to the metrics of the model.
+\end{itemize}
 
 % Start writing here----------------------------------------------------
 \chapter{Models}
@@ -629,7 +711,7 @@ Explicar características, fuentes de obtención, limitaciones y más.
 \section{YOLO}
 
 \begin{itemize}
-	\item Obtenemos muy buenas precisiones: YOLOv8s + YOLOv8l + YOLOv11s + YOLOv11l (mejor precisión con YOLOv11, pero resultados muy aceptables con YOLOv8).
+	\item Obtenemos muy buenas precisiones (60\%): YOLOv8s + YOLOv8l + YOLOv11s + YOLOv11l (mejor precisión con YOLOv11, pero resultados muy aceptables con YOLOv8).
 	\item Falla cuando hay densidad muy alta de cardilla, lo que reduce la precisión enormemente creando boxes demasiado grandes
 	\item Limitado por el hardware actual. Modelos con confianza relativamente media-alta. Limitados por dataset.
 \end{itemize}
