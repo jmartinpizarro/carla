@@ -237,7 +237,7 @@ hmargin=3cm
 		\begin{Large}
 			Joao Ricardo Pereira Valente\\
 			Leganés, Madrid\\
-            June, 2026\\
+            March, 2026\\
 		\end{Large}
 	\end{center}
 	\vfill
@@ -518,7 +518,7 @@ One of the most important points of this regulation is the classification of the
 
 In addition, the law in Spain (and thus in the entire European Union) requires that every drone pilot must be certified with a license, obtaining an unique identity number valid in the entire European Union.
 
-This work aims to contribute to the open and specific categories. Here, individual such as farmers or researchers may be in the need of using drones for recognising and identifying weeds in their fields. 
+This work aims to contribute to the open and specific categories. Here, individuals such as farmers or researchers may be in the need of using drones for recognising and identifying weeds in their fields. 
 
 However, these services can be also done through a company specialized in this. The pilots the company must be certified pilots as well. And because of the high amount of flights per week that these pilots may need to do, exists the \textbf{Light UAS Operator Certificate} (LUC) for frequent operators. These operators do not need to ask for previous authorization to AESA, reducing the bureocracy and speeding up the process of asking for authorization, which can last up to ten working days. 
 
@@ -615,7 +615,7 @@ Overall, while regulation is less standardized than in Europe, most Hispanoameri
 
 something
 
-\section{Budget of the project}
+\section{Planification and budget}
 
 \clearpage
 
@@ -639,11 +639,33 @@ The collection of the entire dataset was done in the Treinta y Tres department o
 
 For the aerial recording of the environment, the usage of a quadcopter was necessary. The aerial platform was a quadcopter, DJI Mavic Air 2, equipped with an integrated RGB sensor, model FC3170, aperture of f/2.8, exposure time of 1/500 s, and focal distance of 4 mm. The flight was made on 21 October 2024, at noon with a clear sky. The flight was scheduled on a cross-path over 0.4 ha, at 10 m altitude (this can vary depending on the frame), with 75 \% frontal and 70 \% lateral overlap, and a camera angle of 75 ° (this varies in some videos in order to obtain different angles of view from the same point) (adapted from \cite{Quinones2025}).
 
-The entire dataeset frame collection has lasted, at least, one year --- as it started on the October 22, 2024 and at the current date of writing this document (December 1, 2025) more data is currently being recorded for increasing the size of the dataset.
+In order to increase the posibilities of experiments for this works, videos were recorded in two modalities: \textbf{RGB} and \textbf{hyperspectral}. RGB stands for Red, Green and Blue, which combined in different measures different colors can be generated.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.75\linewidth]{imagenes/dataset/rgb_frame.png}
+	\caption{A frame from the RGB dataset. In this case, weeds can be easily identified due to its size and color constract with respect to the soil.}
+	\label{fig:rgbCardilla}
+\end{figure}
+
+On the other hand, hyperspectral is based on traditional imaging with a combination of spectroscopy to capture detailed information across a give range of wavelenghts. Spectroscopy is the study of how matter and electromagnetic radiation interact between other through absorption, emission or scattering.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.75\linewidth]{imagenes/dataset/hyperspectral_frame.png}
+	\caption{The corresponding hyperspectral image for \ref{fig:rgbCardilla}. Notice they slightly differ between each other.}
+	\label{fig:hyperspectralCardilla}
+\end{figure}
+
+As it is possible to see in the previous image \ref{fig:hyperspectralCardilla}, the specimens of the weed can be clearly distinguished from the soil and other minor vegetation, adding an extra layer of precision for its detection.
+
+For the same flight, both modes were used. However, due to external factor the videos are not exactly the same so the corresponding frames neither are. A script was executed to reduce these differences to the minimum.
+
+The entire dataset frame collection has lasted, at least, one year --- as it started on the October 22, 2024 and at the current date of writing this document (December 1, 2025) more data is currently being recorded for increasing the size of the dataset.
 
 \section{Data Analysis}
 
-This part embraces the entirety of a defined pipeline in order to incorporate the frames obtained from the videos into the dataset. The following diagram represents the pipeline followed:
+This part embraces the entirety of a defined pipeline in order to incorporate the frames obtained from the videos into the dataset. The following diagram represents the pipeline used:
 
 \begin{figure}[H]
     \centering
@@ -651,7 +673,7 @@ This part embraces the entirety of a defined pipeline in order to incorporate th
     \label{fig:dataPipeline}
 \end{figure}
 
-\paragraph{Transforming the videos into useful frames}
+\subsection{Transforming the videos into useful frames}
 
 Processing the videos was the first step for obtaining useful frames that could be used to fed future models. Thus, a script was coded to process each video, obtaining $n$ frames depending on an offset $t$ (in seconds) given as a parameter. The offset acts as a separator, only returning one frame each $t$ seconds. This was done in order to obtain the highest amount possible of significant images tha may differ (slightly or very) between each other. Doing this, the dataset would have less images, but richer in quality.
 
@@ -670,16 +692,19 @@ Processing the videos was the first step for obtaining useful frames that could 
 \caption{A sample of some frames after processing the entirety of the videos. Notice the changes on the drone orientation with respect to the ground on images b (bottom left) and c (right).}
 \end{figure}
 
+All the images extracted have the same dimensions: 3,840 x 2,160 (width, height) with an average weight of 14 MB aproximately. Thus, the resolution and image quality is really high. This is really important when training the models, specially YOLO.
 
-\paragraph{Image Analysis} 
+
+\subsection{Image Analysis}
+\label{subsec:imageAnalysis}
 
 After obtaining the frames, it is important to remove useless images or similar images, as they add noise to the training (redundant images), making it slower and can generate overfitting is the images are too similar.
 
-For removing this images, it was taken into account the images previously inspected. If the frame was too near to the timestamp of another one, it was checked in order to see if the drone did moved enough in order to consider the new frame a significant one or the image should be removed. It is important to mention that not a lot of images were needed to be removed except in one video, were the drone was almost flying statically without moving too much. From this last video a total of 70 frames were generated. From those 70 frames, only 37 were considered relevant.
+For removing this images, it was taken into account the images previously inspected. If the frame was too near to the timestamp of another one, it was checked in order to see if the drone did moved enough in order to consider the new frame a significant one or the image should be removed. It is important to mention that not a lot of images were needed to be removed except in one video, were the drone was almost flying statically without moving too much. From this last video a total of 70 frames were generated, which only 37 of those were considered relevant.
 
 After that, a deep analysis of the images is done in order to comprenhend the nature of the problem and the structure of the dataset.
 
-\subparagraph{Environment analysis} Because of the location where the dataset was recorded, the environment is not rich in diversity. However, the cardilla can be found in Brazil, Uruguay and Argentina mainly, which share a similar conditions. 
+\subsubsection{Environment analysis} Because of the location where the dataset was recorded, the environment is not rich in diversity. However, the cardilla can be found in Brazil, Uruguay and Argentina mainly, which share similar conditions. 
 
 Although these arises problems that will be later discused in section \ref{subsec:dataLimits}, it is possible to assume a generalization for the region (for the moment).
 
@@ -692,8 +717,8 @@ Deepining more into the environment, it is possible to obtain different characte
 		\item \textbf{The density is not enough to form an almost indistinguible shape made of cardillas}, being possible to count and identify them with relatively ease.
 		\item \textbf{The density is high or really high}; the plants are too near between each other and is really complicated to identify them (as you can see in image \ref{fig:cardillaDensity}).
 	\end{itemize}
-	\item The ground is almost always covered by a thin layer of green, yellow or brown grass. The dryer the soil, the browner the grass is. The density of cardillas increases in that specific region when this fact is true. Cardillas were also found in soil with yellow grass, but the quantity was infima.
-	\item Depending on the angle of the camera is easier to identify some individuals. In some cases, the closer it forms a 90º angle with respect to the ground is easier to identify the individuals. However, when the density increases too much, the complexity of the problem escalates. Frames with an angle in the range [50, 70] degrees are still required and are incredibly useful.
+	\item The ground is almost always covered by a thin layer of green, yellow or brown grass. The dryer the soil, the browner the grass is. The density of cardillas increases in that specific region when this fact is true. Cardillas were also found in soil with yellow grass, but the quantity was negligible.
+	\item Depending on the angle of the camera is easier to identify some individuals. In some cases, the closer it forms a 90º angle with respect to the ground is easier to identify the individuals. However, when the density increases too much, the complexity of the problem escalates. Frames with an angle in the range of [50, 70] degrees are still required and are incredibly useful.
 \end{itemize}
 
 \begin{figure}[H]
@@ -712,12 +737,18 @@ Deepining more into the environment, it is possible to obtain different characte
 
 After this research, it is confirmed that different densities can be found of these type of weed, directly affecting the environment, avoiding the appereance of other species in the designated region. This is important to take into account, as no other possible plant species were identified during this process.
 
-Furthermore, it is important to take into consideration the density of the weed in certain region, as it was previously mentioned. The human capacity of detecting the weeds is limited and that affects directly the labelling (see paragraph \ref{par:imageLabelling}) used for the model to be trained. Only perfect instances will be annotated to reduce overfitting or possible errors.
+Furthermore, it is important to take into consideration the density of the weed in certain region, as it was previously mentioned. The human capacity of detecting the weeds is limited and that affects directly the labelling (see paragraph \ref{par:imageLabelling}) used for the e cardilla is vividly green with respect to the other cardillas prmodel to be trained. Only perfect instances will be annotated to reduce overfitting or possible errors.
 
 
-\subparagraph{Plant analysis} An aerial analysis of the plant is also done in order to know how to correctly label instances of it. For a more precise analysis of the plant, please refer to the subsection \ref{subsec:aboutEryngium}, as it contains an extense explication about its main characteristics.
+\subsubsection{Plant analysis} An aerial analysis of the plant is also done in order to know how to correctly label instances of it. For a more precise analysis of the plant, please refer to the subsection \ref{subsec:aboutEryngium}, as it contains an extense explication about its main characteristics.
 
-From an aerial perspective, the cardilla can be identified from two different angles: forming an angle in the range [50, 70] degrees with respect to the ground or forming an angle close to 90 degres with respect to the ground. Both points of view are valid and give important information about the individuals of the specific region, but limitations need to be considered.
+From an aerial perspective, the cardilla can be identified from two different angles: forming an angle in the range of [50, 70] degrees with respect to the ground or forming an angle close to 90 degres with respect to the ground. Both points of view are valid and give important information about the individuals of the specific region, but limitations need to be considered.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.75\linewidth]{imagenes/droneAngleRecording.pdf}
+	\caption{A representation of the two possible options when recording on flight.}
+\end{figure}
 
 Depends on the ground and the context, but usually the weed has clear shape, circular with leaves rooting from the origin of it. Leaves are usually greener in the inner part (the closer to the center) whereas the parts near the end of the leaves are drier, being browner or grey. This is vital, as makes it easier to identify them with respect to the soil.
 
@@ -725,14 +756,41 @@ However, smaller individuals can be entirely green, making the previous method f
 
 With frames in the range of [50, 70] degrees with respect to the ground it is relatively easy to identify the biggest specimens as it stands out the individual. Notice that these weeds can be up to 2 meters tall if the stem is considered.
 
-The biggest specimens are easy to identify: the stem is easily distinguish. Although its great size, the cardilla is vividly green with respect to the other cardillas previously mentioned.
+The biggest specimens are easy to identify: the stem is unchallenging to distinguish. Although its great size, the cardilla is vividly green with respect to the other cardillas previously mentioned with smaller size.
 
-\textbf{IMAGES WITH DIFFERENT INDIVIDUALS}
+\begin{figure}[H]
+\centering
 
-\paragraph{Image Labelling}
+\begin{minipage}[t]{0.49\textwidth}
+	{\color{myblue}\fbox{\includegraphics[width=0.98\linewidth]{imagenes/dataset/cardilla_example1.pdf}}}
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.49\textwidth}
+	{\color{myblue}\fbox{\includegraphics[width=0.98\linewidth]{imagenes/dataset/cardilla_example2.pdf}}}
+\end{minipage}
+\caption{Low-to-med density environment. The smaller cardillas are greener than the medium-sized ones. A taller, greener cardilla constrasts in the image on the left.}
+\label{fig:cardillaExamples}
+\end{figure}
+
+\subsection{Image Labelling}
 \label{par:imageLabelling}
 
-This is the most time-consuming part of the dataset creation.
+For carrying out this task, the tool \href{https://roboflow.com/}{Roboflow} has been used due to its versatility and capabilities for image processing and labelling. Roboflow is a SaaS (Software as a Service) that allows to manage, anotate and prepare dataset used in computer vision. Facilitates assignments such as labelling, generating augmented versions of the dataset and the exportation to different training formats such as YOLO or COCO.
+
+For the image labelling, the usage of \textbf{bounding boxes} was crucial. The concept of bounding boxes can be defined as the following: a rectangular outline that completely encloses an object or an specific area, defined by coordinates. Those coordinates are usually inside a quadruple (if the shape is rectangular) with the form of:
+$$\text{Bounding Box} = [x\_min, y\_min, x\_max, y\_max]$$
+
+Where $x$ corresponds with the coordinate (pixel) in the x-axis and $y$ corresponds with the one in the y-axis.
+
+As this problem only addresses only one type of weed, the cardilla, the usage of only one class was needed in order to label the entire dataset. 
+
+
+\subsubsection{Labelling Criteria}
+
+After the extensive research commented in the section \ref{subsec:imageAnalysis}. 
+
+
+This is the most time-consuming part of the dataset creation. Identifying  all possible samples from the dataset manually is complicated without the help of a team specialised in the topic. Knowing this, it is probable that the dataset labelling may contain some errors that may cause the appereance of false positives or reduced performance of our model.
 
 \subsection{Limitations of the dataset}
 \label{subsec:dataLimits}
@@ -741,10 +799,10 @@ At the current date of writing this document (\today), the dataset is not perfec
 
 \begin{itemize}
 	\item Limited location variety. Due to other limitations outside this scope, the recordings were done only in the field commented in the section \ref{section:dataCollectionProcedures}. These won't allow to generalise properly to the model.
-	\item Reduced sample size. With 170 images, the variety of the images is limited to the environment subject to study. Furthermore, the terrain may differ between other location (can be darker or lighter), directly affecting to the metrics of the model.
+	\item Reduced sample size. The variety of the images is limited to the environment subject to study. Furthermore, the terrain may differ between other location (can be darker or lighter), directly affecting to the metrics of the model.
 \end{itemize}
 
-
+\clearpage
 
 \chapter{Models}
 \section{T-Rex 2}
