@@ -822,14 +822,22 @@ At the current date of writing this document (\today), the dataset is not perfec
 
 \section{YOLO}
 
+Para el dataset genérico con todo tipo de información menos hiperspectral:
+
 \begin{itemize}
-	\item Obtenemos muy buenas precisiones (60\%): YOLOv8s + YOLOv8l + YOLOv11s + YOLOv11l (mejor precisión con YOLOv11, pero resultados muy aceptables con YOLOv8).
-	\item Falla cuando hay densidad muy alta de cardilla, lo que reduce la precisión enormemente creando boxes demasiado grandes
-	\item Limitado por el hardware actual. Modelos con confianza relativamente media-alta. Limitados por dataset.
+	\item \textbf{El mejor modelo fue yolo11s\_e60\_b32\_s42\_box7.5\_7821d con 0.632 de precisión}. Con respecto a su homólogo en el dataset genérico, obtenemos un 6\% más (o.567)
+	\item Mantenemos recall.
 \end{itemize}
+
+Se puede afirmar que, con una menor altura, obtenemos una mayor precisión, pero una peor estimación del entorno global.
 
 \subsection{Results}
 
+Para el dataset que se basa en vuelo rasante:
+
+\begin{itemize}
+	\item 
+\end{itemize}
 
 
 \section{Modified YOLO: exploring the limits of object detection}
