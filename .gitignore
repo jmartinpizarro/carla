@@ -207,7 +207,7 @@ marimo/_lsp/
 __marimo__/
 
 data/
-runs/
+runs_*/
 
 # latex compilation shit
 *.aux

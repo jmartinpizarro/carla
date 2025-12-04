@@ -90,7 +90,7 @@ def main():
 
         # without any more relevant analysis, its complicated to define which one is the
         # best. However, it is possible to save the best precission and mAP50
-        if prediction_metrics.box.p >= best_precision:
+        if prediction_metrics.box.p[0] >= best_precision:
             best_precision = prediction_metrics.box.p[0] # only one class
             best_precission_model = model
 
