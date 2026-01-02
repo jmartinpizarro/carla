@@ -782,15 +782,18 @@ $$\text{Bounding Box} = [x\_min, y\_min, x\_max, y\_max]$$
 
 Where $x$ corresponds with the coordinate (pixel) in the x-axis and $y$ corresponds with the one in the y-axis.
 
-As this problem only addresses only one type of weed, the cardilla, the usage of only one class was needed in order to label the entire dataset. 
+As this problem only addresses only one type of weed, the cardilla, the usage of only one class was needed in order to label the entire dataset. This by itself can cause future problems when predicting instances.
+
+Initially, the dataset contained mainly images full or samples of the plant, but not of the ground without any weed. This could cause an increase in false positives, as the neural network could predict that \textit{any soil with any type of grass is a cardilla}. Data augmentation and manually extracting those frames was needed in order to use them training and reducing false-positives.
 
 
 \subsubsection{Labelling Criteria}
 
-After the extensive research commented in the section \ref{subsec:imageAnalysis}. 
+After the extensive research commented in the section \ref{subsec:imageAnalysis}, it is possible to start with the image labelling. This is the most time-consuming part of the dataset creation. Identifying  all possible samples from the dataset manually is complicated without the help of a team specialised in the topic. Knowing this, it is probable that the dataset labelling may contain some errors that may cause the appereance of false positives or reduced performance of our model.
 
 
-This is the most time-consuming part of the dataset creation. Identifying  all possible samples from the dataset manually is complicated without the help of a team specialised in the topic. Knowing this, it is probable that the dataset labelling may contain some errors that may cause the appereance of false positives or reduced performance of our model.
+
+
 
 \subsection{Limitations of the dataset}
 \label{subsec:dataLimits}
