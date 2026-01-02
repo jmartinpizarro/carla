@@ -207,7 +207,9 @@ marimo/_lsp/
 __marimo__/
 
 data/
-runs_*/
+results_*/
+!yolo_test_results_*
+runs/
 
 # latex compilation shit
 *.aux
