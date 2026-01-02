@@ -7,8 +7,13 @@ import argparse
 
 import pandas as pd
 from ultralytics import YOLO
+import numpy as np
+import torch
+from ultralytics.utils.metrics import box_iou
+import cv2
 
 TESTING_EXPORT_DIR = 'model_testing_results'
+
 
 def get_args():
     parser = argparse.ArgumentParser(
@@ -16,10 +21,10 @@ def get_args():
     )
 
     parser.add_argument(
-        "--data",
-        default='data/yolo_v3/data.yaml',
+        '--data',
+        default='data/yolo_v3',
         type=str,
-        help="Route where the .yaml definition of the dataset for YOLO can be found."
+        help='Route where the .yaml definition of the dataset for YOLO can be found.',
     )
 
     parser.add_argument(
@@ -30,6 +35,84 @@ def get_args():
     )
 
     return parser.parse_args()
+
+
+def load_yolo_gt(txt_path, img_shape):
+    h, w = img_shape[:2]
+    boxes = []
+
+    if not os.path.exists(txt_path):
+        return torch.empty((0, 4))
+
+    with open(txt_path) as f:
+        for line in f:
+            _, cx, cy, bw, bh = map(float, line.split())
+            x1 = (cx - bw / 2) * w
+            y1 = (cy - bh / 2) * h
+            x2 = (cx + bw / 2) * w
+            y2 = (cy + bh / 2) * h
+            boxes.append([x1, y1, x2, y2])
+
+    return torch.tensor(boxes)
+
+# For computing the RMSE metric. Not TP based
+def compute_rmse_from_model(model, img_dir, gt_dir, iou_thr=0.5):
+    rmse_sum = 0.0
+    rmse_n = 0
+
+    images = [f for f in os.listdir(img_dir) if f.endswith(('.jpg', '.png'))]
+
+    for img_name in images:
+        img_path = os.path.join(img_dir, img_name)
+        gt_path = os.path.join(gt_dir, img_name.replace('.jpg', '.txt'))
+
+        img = cv2.imread(img_path)
+        if img is None:
+            continue
+
+        gt_boxes = load_yolo_gt(gt_path, img.shape)
+        if len(gt_boxes) == 0:
+            continue
+
+        # 🔹 CLAVE: pasar PATH, no imagen
+        results = model.predict(img_path, verbose=False)
+        pred_boxes = results[0].boxes.xyxy.cpu()
+
+        if len(pred_boxes) == 0:
+            continue
+
+        iou = box_iou(gt_boxes, pred_boxes)
+        best_iou, best_pred = iou.max(dim=1)
+        valid = best_iou > iou_thr
+
+        if valid.sum() == 0:
+            continue
+
+        gt_idx = torch.arange(len(gt_boxes))[valid]
+        pred_idx = best_pred[valid]
+
+        unique = {}
+        for g, p, i in zip(
+            gt_idx.tolist(), pred_idx.tolist(), best_iou[valid].tolist()
+        ):
+            if p not in unique or i > unique[p][1]:
+                unique[p] = (g, i)
+
+        pred_idx = torch.tensor(list(unique.keys()))
+        gt_idx = torch.tensor([v[0] for v in unique.values()])
+
+        pb = pred_boxes[pred_idx]
+        gb = gt_boxes[gt_idx]
+
+        pcx = (pb[:, 0] + pb[:, 2]) / 2
+        pcy = (pb[:, 1] + pb[:, 3]) / 2
+        gcx = (gb[:, 0] + gb[:, 2]) / 2
+        gcy = (gb[:, 1] + gb[:, 3]) / 2
+
+        rmse_sum += ((pcx - gcx) ** 2 + (pcy - gcy) ** 2).sum().item()
+        rmse_n += len(pred_idx) * 2
+
+    return np.sqrt(rmse_sum / rmse_n) if rmse_n > 0 else 0.0
 
 
 def main():
@@ -70,15 +153,27 @@ def main():
         models_output[model]['training_metrics'] = metrics
 
         # now it is necessary to obtain the metrics with the test set
-        YOLO_MODEL = YOLO(f'{route}/weights/best.pt')
-        prediction_metrics = YOLO_MODEL.val(
-            data=args.data,
+        YOLO_VAL = YOLO(f'{route}/weights/best.pt')
+        prediction_metrics = YOLO_VAL.val(
+            data=os.path.join(args.data, 'data.yaml'),
             split='test',
             imgsz=640,
             half=True,
             device='cuda',
+            save=True,
+            name=route,
+            save_conf=True,
+            save_txt=False,
             save_json=False,
             verbose=False,
+        )
+
+        YOLO_PRED = YOLO(f'{route}/weights/best.pt')
+
+        rmse = compute_rmse_from_model(
+            model=YOLO_PRED,
+            img_dir=os.path.join(args.data, 'test', 'images'),
+            gt_dir=os.path.join(args.data, 'test', 'labels'),
         )
 
         models_output[model]['test_metrics'] = {
@@ -86,12 +181,13 @@ def main():
             'mAP50-95': prediction_metrics.box.map,
             'precision': prediction_metrics.box.p,
             'recall': prediction_metrics.box.r,
+            'rmse': rmse,
         }
 
         # without any more relevant analysis, its complicated to define which one is the
         # best. However, it is possible to save the best precission and mAP50
         if prediction_metrics.box.p[0] >= best_precision:
-            best_precision = prediction_metrics.box.p[0] # only one class
+            best_precision = prediction_metrics.box.p[0]  # only one class
             best_precission_model = model
 
         if prediction_metrics.box.map50 >= best_map50:
@@ -102,13 +198,13 @@ def main():
             '[process_yolo_results] :: The script has ended\n',
             f'\t The model with the best precission was: {best_precission_model} with {best_precision}\n',
             f'\t The model with the best map50 was: {best_map50_model} with {best_map50}\n',
-        )   
+        )
 
-        os.makedirs(f"{TESTING_EXPORT_DIR}/{model}", exist_ok=True)
+        os.makedirs(f'{TESTING_EXPORT_DIR}/{model}', exist_ok=True)
 
         # Training metrics → CSV
         training_csv_path = os.path.join(
-            f"{TESTING_EXPORT_DIR}/{model}", f'{model}_training_metrics.csv'
+            f'{TESTING_EXPORT_DIR}/{model}', f'{model}_training_metrics.csv'
         )
         models_output[model]['training_metrics'].to_csv(
             training_csv_path, index=False
@@ -117,11 +213,9 @@ def main():
         # Test metrics → CSV
         test_metrics_df = pd.DataFrame([models_output[model]['test_metrics']])
         test_csv_path = os.path.join(
-            f"{TESTING_EXPORT_DIR}/{model}", f'{model}_test_metrics.csv'
+            f'{TESTING_EXPORT_DIR}/{model}', f'{model}_test_metrics.csv'
         )
         test_metrics_df.to_csv(test_csv_path, index=False)
-
-
 
 
 if __name__ == '__main__':
