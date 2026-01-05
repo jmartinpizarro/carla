@@ -6,22 +6,23 @@ safely using subprocess, avoiding memory leaks in VRAM and RAM.
 import os
 import time
 import uuid
-import subprocess
 import itertools
 
 from src.yolo.utils import *
 
+from ultralytics import YOLO
+
 training_space = {
     'model': [
-        'yolov8s.pt',
+        'yolov8n.pt',
         'yolov8l.pt',
-        'yolo11s.pt',
+        'yolo11n.pt',
         'yolo11l.pt',
     ],
-    'epochs': [60, 100],
-    'batch': [16, 32],
-    'seed': [42],
-    'box': [7.5, 10.0],
+    'epochs': [200],
+    'batch': [16],
+    'seed': [42, 43, 44, 45, 46],
+    'box': [5.0],
 }
 
 
@@ -48,44 +49,37 @@ def run_training(config, data, outdir):
 
     print(f'\n[train_yolo.py] :: Starting experiment: {exp_name}')
 
-    # Build the YOLO training command
-    cmd = [
-        'yolo',
-        'detect',
-        'train',
-        f'model={model_path}',
-        f'data={data}',
-        f'epochs={config["epochs"]}',
-        f'batch={config["batch"]}',
-        f'imgsz=640',
-        f'optimizer=auto',
-        f'seed={config["seed"]}',
-        f'box={config["box"]}',
-        f'project={outdir}',
-        f'name={exp_name}',
-        'cache=disk',
-        'plots=True',
-    ]
-
-    # Run training in a SEPARATE PROCESS
-    result = subprocess.run(cmd)
-
-    if result.returncode != 0:
-        print(
-            f'[train_yolo.py] :: WARNING: Experiment {exp_name} crashed with code {result.returncode}'
-        )
-    else:
-        print(f'[train_yolo.py] :: Finished experiment: {exp_name}')
+    model = YOLO(model_path)
+    # This parameters have been obtained through experimentations
+    model.train(
+        data=data,
+        epochs=config['epochs'],
+        batch=config['batch'],
+        imgsz=640,
+        optimizer='auto',
+        seed=config['seed'],
+        box=config['box'],
+        project=outdir,
+        name=exp_name,
+        cache='disk',
+        plots=True,
+    )
 
 
 def main():
+    # TODO: not necessary to refactor this
     args = get_args()
     start = time.time()
 
     print('[train_yolo.py] :: Grid Search Training Started\n')
 
     for config in grid_search(training_space):
-        run_training(config, args.data, args.outdir)
+        try:
+            run_training(config, args.data, args.outdir)
+        except Exception as e:
+            print(
+                f'[train_yolo] :: An exception has ocurred when training the model {config}\n\n\t{e}'
+            )
 
     end = time.time()
 

@@ -13,7 +13,8 @@ from ultralytics.utils.metrics import box_iou
 import cv2
 
 TESTING_EXPORT_DIR = 'model_testing_results'
-
+TILE_SIZE = 640
+STRIDE = 160
 
 def get_args():
     parser = argparse.ArgumentParser(
@@ -22,7 +23,7 @@ def get_args():
 
     parser.add_argument(
         '--data',
-        default='data/yolo_v3',
+        required=True,
         type=str,
         help='Route where the .yaml definition of the dataset for YOLO can be found.',
     )
@@ -32,6 +33,15 @@ def get_args():
         default='runs',
         type=str,
         help="Route where the output model and its results are generated. By default is 'runs/'",
+    )
+
+    parser.add_argument(
+        "--tiled",
+        required=True,
+        type=bool,
+        default=False,
+        help="If the model has been trained using a tiled-input approach, activate this parameter for " \
+        "modifying the input of the model. By default is 'False'"
     )
 
     return parser.parse_args()
@@ -56,7 +66,7 @@ def load_yolo_gt(txt_path, img_shape):
     return torch.tensor(boxes)
 
 # For computing the RMSE metric. Not TP based
-def compute_rmse_from_model(model, img_dir, gt_dir, iou_thr=0.5):
+def compute_rmse_from_model(model, img_dir, gt_dir, tiled=False, iou_thr=0.5):
     rmse_sum = 0.0
     rmse_n = 0
 
@@ -74,9 +84,13 @@ def compute_rmse_from_model(model, img_dir, gt_dir, iou_thr=0.5):
         if len(gt_boxes) == 0:
             continue
 
-        # 🔹 CLAVE: pasar PATH, no imagen
-        results = model.predict(img_path, verbose=False)
-        pred_boxes = results[0].boxes.xyxy.cpu()
+        if tiled:
+            pred_boxes = tiled_inference(model, img)
+        else:
+            results = model.predict(img_path, verbose=False)
+            if len(results[0].boxes) == 0:
+                continue
+            pred_boxes = results[0].boxes.xyxy.cpu()
 
         if len(pred_boxes) == 0:
             continue
@@ -92,9 +106,7 @@ def compute_rmse_from_model(model, img_dir, gt_dir, iou_thr=0.5):
         pred_idx = best_pred[valid]
 
         unique = {}
-        for g, p, i in zip(
-            gt_idx.tolist(), pred_idx.tolist(), best_iou[valid].tolist()
-        ):
+        for g, p, i in zip(gt_idx.tolist(), pred_idx.tolist(), best_iou[valid].tolist()):
             if p not in unique or i > unique[p][1]:
                 unique[p] = (g, i)
 
@@ -113,6 +125,65 @@ def compute_rmse_from_model(model, img_dir, gt_dir, iou_thr=0.5):
         rmse_n += len(pred_idx) * 2
 
     return np.sqrt(rmse_sum / rmse_n) if rmse_n > 0 else 0.0
+
+
+def generate_tiles(img):
+    h, w = img.shape[:2]
+
+    x_starts = []
+    x = 0
+    while x + TILE_SIZE < w:
+        x_starts.append(x)
+        x += STRIDE
+    x_starts.append(w - TILE_SIZE)
+
+    y_starts = []
+    y = 0
+    while y + TILE_SIZE < h:
+        y_starts.append(y)
+        y += STRIDE
+    y_starts.append(h - TILE_SIZE)
+
+    tiles = []
+    for y in y_starts:
+        for x in x_starts:
+            tile = img[y:y + TILE_SIZE, x:x + TILE_SIZE]
+            tiles.append((tile, x, y))
+
+    return tiles
+
+def project_boxes_to_image(boxes, offset_x, offset_y):
+    boxes[:, [0, 2]] += offset_x
+    boxes[:, [1, 3]] += offset_y
+    return boxes
+
+def tiled_inference(model, img, conf=0.25, iou=0.5):
+    all_boxes = []
+    all_scores = []
+
+    tiles = generate_tiles(img)
+
+    for tile, ox, oy in tiles:
+        results = model.predict(tile, conf=conf, verbose=False)
+        if len(results[0].boxes) == 0:
+            continue
+
+        boxes = results[0].boxes.xyxy.cpu()
+        scores = results[0].boxes.conf.cpu()
+
+        boxes = project_boxes_to_image(boxes, ox, oy)
+
+        all_boxes.append(boxes)
+        all_scores.append(scores)
+
+    if not all_boxes:
+        return torch.empty((0, 4))
+
+    boxes = torch.cat(all_boxes)
+    scores = torch.cat(all_scores)
+
+    keep = torch.ops.torchvision.nms(boxes, scores, iou)
+    return boxes[keep]
 
 
 def main():
@@ -137,6 +208,7 @@ def main():
 
         # if the model could not be trained, skip it
         if model == 'detect' or not os.listdir(os.path.join(route, 'weights')):
+            print(f"\tNo model founded for the testing evaluation\n\n")
             continue
 
         df = pd.read_csv(os.path.join(route, 'results.csv'))
@@ -174,6 +246,7 @@ def main():
             model=YOLO_PRED,
             img_dir=os.path.join(args.data, 'test', 'images'),
             gt_dir=os.path.join(args.data, 'test', 'labels'),
+            tiled=args.tiled
         )
 
         models_output[model]['test_metrics'] = {
