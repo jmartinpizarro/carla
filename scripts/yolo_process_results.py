@@ -16,6 +16,7 @@ TESTING_EXPORT_DIR = 'model_testing_results'
 TILE_SIZE = 640
 STRIDE = 160
 
+
 def get_args():
     parser = argparse.ArgumentParser(
         description='YOLO and YOLO-mods Results Renderer'
@@ -36,12 +37,12 @@ def get_args():
     )
 
     parser.add_argument(
-        "--tiled",
+        '--tiled',
         required=True,
         type=bool,
         default=False,
-        help="If the model has been trained using a tiled-input approach, activate this parameter for " \
-        "modifying the input of the model. By default is 'False'"
+        help='If the model has been trained using a tiled-input approach, activate this parameter for '
+        "modifying the input of the model. By default is 'False'",
     )
 
     return parser.parse_args()
@@ -64,6 +65,7 @@ def load_yolo_gt(txt_path, img_shape):
             boxes.append([x1, y1, x2, y2])
 
     return torch.tensor(boxes)
+
 
 # For computing the RMSE metric. Not TP based
 def compute_rmse_from_model(model, img_dir, gt_dir, tiled=False, iou_thr=0.5):
@@ -106,7 +108,9 @@ def compute_rmse_from_model(model, img_dir, gt_dir, tiled=False, iou_thr=0.5):
         pred_idx = best_pred[valid]
 
         unique = {}
-        for g, p, i in zip(gt_idx.tolist(), pred_idx.tolist(), best_iou[valid].tolist()):
+        for g, p, i in zip(
+            gt_idx.tolist(), pred_idx.tolist(), best_iou[valid].tolist()
+        ):
             if p not in unique or i > unique[p][1]:
                 unique[p] = (g, i)
 
@@ -147,15 +151,17 @@ def generate_tiles(img):
     tiles = []
     for y in y_starts:
         for x in x_starts:
-            tile = img[y:y + TILE_SIZE, x:x + TILE_SIZE]
+            tile = img[y : y + TILE_SIZE, x : x + TILE_SIZE]
             tiles.append((tile, x, y))
 
     return tiles
+
 
 def project_boxes_to_image(boxes, offset_x, offset_y):
     boxes[:, [0, 2]] += offset_x
     boxes[:, [1, 3]] += offset_y
     return boxes
+
 
 def tiled_inference(model, img, conf=0.25, iou=0.5):
     all_boxes = []
@@ -208,7 +214,7 @@ def main():
 
         # if the model could not be trained, skip it
         if model == 'detect' or not os.listdir(os.path.join(route, 'weights')):
-            print(f"\tNo model founded for the testing evaluation\n\n")
+            print(f'\tNo model founded for the testing evaluation\n\n')
             continue
 
         df = pd.read_csv(os.path.join(route, 'results.csv'))
@@ -246,7 +252,7 @@ def main():
             model=YOLO_PRED,
             img_dir=os.path.join(args.data, 'test', 'images'),
             gt_dir=os.path.join(args.data, 'test', 'labels'),
-            tiled=args.tiled
+            tiled=args.tiled,
         )
 
         models_output[model]['test_metrics'] = {

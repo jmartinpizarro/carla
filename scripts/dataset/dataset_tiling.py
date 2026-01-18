@@ -64,7 +64,7 @@ def get_routes(data_route: str) -> Tuple[List, List]:
 def process_labels(label_path, tile_x, tile_y, img_w, img_h) -> List[str]:
     """
     Transforms YOLO labels into pixels in order to process it for the new labels of the tiles
-    
+
     @param label_path: Description
     @param tile_x: Description
     @param tile_y: Description
@@ -78,7 +78,7 @@ def process_labels(label_path, tile_x, tile_y, img_w, img_h) -> List[str]:
     if not os.path.exists(label_path):
         return new_labels
 
-    with open(label_path, "r") as f:
+    with open(label_path, 'r') as f:
         lines = f.readlines()
 
     for line in lines:
@@ -113,11 +113,11 @@ def process_labels(label_path, tile_x, tile_y, img_w, img_h) -> List[str]:
         cy_new = iy1 + bh_new / 2
 
         new_labels.append(
-            f"{int(cls)} "
-            f"{cx_new / TILE_SIZE} "
-            f"{cy_new / TILE_SIZE} "
-            f"{bw_new / TILE_SIZE} "
-            f"{bh_new / TILE_SIZE}\n"
+            f'{int(cls)} '
+            f'{cx_new / TILE_SIZE} '
+            f'{cy_new / TILE_SIZE} '
+            f'{bw_new / TILE_SIZE} '
+            f'{bh_new / TILE_SIZE}\n'
         )
 
     return new_labels
@@ -136,18 +136,21 @@ def main():
         images = os.listdir(image_dir)
 
         for img_route in images:
-            if os.path.splitext(img_route)[1] == ".npy": continue
+            if os.path.splitext(img_route)[1] == '.npy':
+                continue
             # do not forget of the entire relative path
             img_route = os.path.join(image_dir, img_route)
 
             img = cv2.imread(img_route)
             # check the image exists
-            assert img is not None,  f"{img_route} could not be processed. Be sure it does exists in the directory during the execution of the program\n"
+            assert img is not None, (
+                f'{img_route} could not be processed. Be sure it does exists in the directory during the execution of the program\n'
+            )
 
             h, w = img.shape[:2]
             base_name, ext = os.path.splitext(os.path.basename(img_route))
 
-            label_path = os.path.join(labels_dir, f"{base_name}.txt")
+            label_path = os.path.join(labels_dir, f'{base_name}.txt')
 
             # for the tiling process, the counter starts on (x, y) = 0. For each tile, the cutting process is exatcly: [x: X +- 640px, y: Y +. 640px].
             # Knowing that the images from the dataset are (1920, 1080)
@@ -171,14 +174,16 @@ def main():
             tile_id = 0
             for y in y_starts:
                 for x in x_starts:
-                    tile = img[y:y + TILE_SIZE, x:x + TILE_SIZE]
-                    tile_name = f"{base_name}_tile_{tile_id}{ext}"
+                    tile = img[y : y + TILE_SIZE, x : x + TILE_SIZE]
+                    tile_name = f'{base_name}_tile_{tile_id}{ext}'
                     cv2.imwrite(os.path.join(args.output_data, tile_name), tile)
 
                     tile_labels = process_labels(label_path, x, y, w, h)
                     if tile_labels:
-                        tile_label_name = f"{base_name}_tile_{tile_id}.txt"
-                        with open(os.path.join(args.output_data, tile_label_name), "w") as f:
+                        tile_label_name = f'{base_name}_tile_{tile_id}.txt'
+                        with open(
+                            os.path.join(args.output_data, tile_label_name), 'w'
+                        ) as f:
                             f.writelines(tile_labels)
 
                     tile_id += 1
