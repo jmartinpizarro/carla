@@ -218,7 +218,39 @@ def process_frame_with_grids(frame, model, conf_threshold, save_debug=False):
     return boxes, scores, classes
 
 
+def calculate_density_percentage(frame, boxes) -> float:
+    """
+    Calculates the percentage of occupied area by the prediction boxes in a given frame
+    
+    :param frame: the frame (CV2 image) to process
+    :param boxes: boxes in YOLO output transformed into absolute position
+    """
+    try:
+        h, w = frame.shape[:2]
+    except Exception as e:
+        raise AttributeError("There is no .shape attribute in the frame. The frame must be CV2 object.\n")
+    
+    # The idea is to calculate the percentage of pixels marked as a 'cardilla' with
+    # respect to the total amount of pixels in the entire frame
+
+    total_image_area = h * w
+
+    boxes_area = []
+    for box in boxes:
+        x1, y1, x2, y2, = box
+        # area of a rectangle = b * h
+        area = (x2 - x1) * (y2 - y1)
+        boxes_area.append(area)
+
+    total_occupied_area = sum(boxes_area)
+
+    return total_occupied_area / total_image_area
+        
+
 def main():
+
+    density_history = []
+
     # If it's an image → just render once
     if not IMAGE_TO_PREDICT.lower().endswith('.mp4'):
         img = cv2.imread(IMAGE_TO_PREDICT)
@@ -232,6 +264,9 @@ def main():
             x1, y1, x2, y2 = map(int, box)
             cv2.rectangle(output, (x1, y1), (x2, y2), (0, 0, 255), 3)
 
+        density_percentage = calculate_density_percentage(frame=img, boxes=boxes)
+        density_history.append(density_percentage)
+
         cv2.putText(
             output,
             f"Cardilla's Number: {len(boxes)}",
@@ -242,6 +277,18 @@ def main():
             thickness,
             cv2.LINE_AA,
         )
+
+        cv2.putText(
+            output,
+            f"Occupied %: {density_percentage}",
+            (100, 100),
+            font,
+            fontScale,
+            color,
+            thickness,
+            cv2.LINE_AA,
+        )
+
 
         cv2.imwrite('output.png', output)
         cv2.imshow('YOLO Prediction', output)
@@ -276,10 +323,24 @@ def main():
                 x1, y1, x2, y2 = map(int, box)
                 cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 0, 255), 3)
 
+            density_percentage = calculate_density_percentage(frame, boxes)
+            density_history.append(density_percentage)
+
             cv2.putText(
                 frame,
                 f"Cardilla's Number: {len(boxes)}",
                 org,
+                font,
+                fontScale,
+                color,
+                thickness,
+                cv2.LINE_AA,
+            )
+
+            cv2.putText(
+                frame,
+                f"Occupied %: {density_percentage}",
+                (100, 100),
                 font,
                 fontScale,
                 color,
