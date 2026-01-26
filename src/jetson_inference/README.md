@@ -28,3 +28,13 @@ docker run --rm -it --runtime nvidia -v /home/jmartinpizarro/videos:/videos -v /
 # for development
 docker run --rm -it --runtime nvidia -v /home/jmartinpizarro/videos:/videos -v /home/jmartinpizarro/results:/results carla-development-infer /bin/bash
 ```
+
+Inside the container, run the following command for checking that everything works fine:
+
+```bash
+python
+import torch
+import torch_tensorrt
+print(torch.cuda.is_available())
+print(torch.cuda.get_device_name(0))
+```
