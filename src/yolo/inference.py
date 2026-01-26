@@ -281,7 +281,7 @@ def main():
         cv2.putText(
             output,
             f"Occupied %: {density_percentage}",
-            (100, 100),
+            (50, 150),
             font,
             fontScale,
             color,
@@ -339,8 +339,8 @@ def main():
 
             cv2.putText(
                 frame,
-                f"Occupied %: {density_percentage}",
-                (100, 100),
+                f"Occupied %: {density_percentage:.4f}",
+                (50, 150),
                 font,
                 fontScale,
                 color,
