@@ -15,9 +15,8 @@ from ultralytics import YOLO
 training_space = {
     'model': [
         'yolov8n.pt',
-        'yolov8l.pt',
         'yolo11n.pt',
-        'yolo11l.pt',
+        'yolo26n.pt'
     ],
     'epochs': [200],
     'batch': [16],
