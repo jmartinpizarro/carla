@@ -5,6 +5,7 @@ Contains the class YoloModel used for doing inference with a .pt model.
 from src.yolo.utils.tiling_utils import process_frame_with_grids
 
 import cv2
+import numpy as np
 from ultralytics import YOLO
 
 
@@ -35,6 +36,7 @@ class YoloModel:
             return
 
         is_video = self.input_data.lower().endswith('.mp4')
+        coverage_historic = np.array(())
 
         if is_video:
             # create some stuff we will need for procesing those files
@@ -48,6 +50,7 @@ class YoloModel:
         else:
             cap = None
             frame = cv2.imread(self.input_data)
+            height, width, _ = frame.shape
             frames = [frame]
 
         frame_count = 0
@@ -84,8 +87,21 @@ class YoloModel:
                         boxes, scores, classes = process_frame_with_grids(
                             frame, YOLO_MODEL, conf_threshold
                         )
+                        frame_mask = np.zeros((height, width), dtype=np.uint8)
                         for box in boxes:
                             x1, y1, x2, y2 = map(int, box)
+
+                            # calculate total coverage: given a matrix of the
+                            # size of the image, populate with ones the places
+                            # where a box is placed
+
+                            frame_mask[y1:y2, x1:x2] = 1
+                            coverage_historic = np.insert(
+                                coverage_historic,
+                                len(coverage_historic),
+                                100.0 * frame_mask.sum() / (width * height),
+                            )
+
                             log_file.write(f'{x1},{y1},{x2},{y2}\n')
                             cv2.rectangle(
                                 frame, (x1, y1), (x2, y2), (0, 0, 255), 3
@@ -96,12 +112,27 @@ class YoloModel:
                         )
 
                         for r in results:
+                            frame_mask = np.zeros(
+                                (height, width), dtype=np.uint8
+                            )
                             for box in r.boxes:
                                 x1, y1, x2, y2 = map(int, box.xyxy[0])
+
+                                # same code for coverage
+                                frame_mask[y1:y2, x1:x2] = 1
+                                coverage_historic = np.insert(
+                                    coverage_historic,
+                                    len(coverage_historic),
+                                    100.0 * frame_mask.sum() / (width * height),
+                                )
+
                                 log_file.write(f'{x1},{y1},{x2},{y2}\n')
                                 cv2.rectangle(
                                     frame, (x1, y1), (x2, y2), (0, 0, 255), 3
                                 )
+                    log_file.write(
+                        f'\nMean Coverage: {np.mean(coverage_historic)}\n'
+                    )
                 except Exception as e:
                     print(
                         f'[YoloModel] :: An error has ocurred when writing the predictions:\n{e}\n'
