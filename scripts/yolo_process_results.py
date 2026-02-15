@@ -7,10 +7,7 @@ import argparse
 
 import pandas as pd
 from ultralytics import YOLO
-import numpy as np
 import torch
-from ultralytics.utils.metrics import box_iou
-import cv2
 
 TESTING_EXPORT_DIR = 'model_testing_results'
 TILE_SIZE = 640
@@ -65,70 +62,6 @@ def load_yolo_gt(txt_path, img_shape):
             boxes.append([x1, y1, x2, y2])
 
     return torch.tensor(boxes)
-
-
-# For computing the RMSE metric. Not TP based
-def compute_rmse_from_model(model, img_dir, gt_dir, tiled=False, iou_thr=0.5):
-    rmse_sum = 0.0
-    rmse_n = 0
-
-    images = [f for f in os.listdir(img_dir) if f.endswith(('.jpg', '.png'))]
-
-    for img_name in images:
-        img_path = os.path.join(img_dir, img_name)
-        gt_path = os.path.join(gt_dir, img_name.replace('.jpg', '.txt'))
-
-        img = cv2.imread(img_path)
-        if img is None:
-            continue
-
-        gt_boxes = load_yolo_gt(gt_path, img.shape)
-        if len(gt_boxes) == 0:
-            continue
-
-        if tiled:
-            pred_boxes = tiled_inference(model, img)
-        else:
-            results = model.predict(img_path, verbose=False)
-            if len(results[0].boxes) == 0:
-                continue
-            pred_boxes = results[0].boxes.xyxy.cpu()
-
-        if len(pred_boxes) == 0:
-            continue
-
-        iou = box_iou(gt_boxes, pred_boxes)
-        best_iou, best_pred = iou.max(dim=1)
-        valid = best_iou > iou_thr
-
-        if valid.sum() == 0:
-            continue
-
-        gt_idx = torch.arange(len(gt_boxes))[valid]
-        pred_idx = best_pred[valid]
-
-        unique = {}
-        for g, p, i in zip(
-            gt_idx.tolist(), pred_idx.tolist(), best_iou[valid].tolist()
-        ):
-            if p not in unique or i > unique[p][1]:
-                unique[p] = (g, i)
-
-        pred_idx = torch.tensor(list(unique.keys()))
-        gt_idx = torch.tensor([v[0] for v in unique.values()])
-
-        pb = pred_boxes[pred_idx]
-        gb = gt_boxes[gt_idx]
-
-        pcx = (pb[:, 0] + pb[:, 2]) / 2
-        pcy = (pb[:, 1] + pb[:, 3]) / 2
-        gcx = (gb[:, 0] + gb[:, 2]) / 2
-        gcy = (gb[:, 1] + gb[:, 3]) / 2
-
-        rmse_sum += ((pcx - gcx) ** 2 + (pcy - gcy) ** 2).sum().item()
-        rmse_n += len(pred_idx) * 2
-
-    return np.sqrt(rmse_sum / rmse_n) if rmse_n > 0 else 0.0
 
 
 def generate_tiles(img):
@@ -214,7 +147,7 @@ def main():
 
         # if the model could not be trained, skip it
         if model == 'detect' or not os.listdir(os.path.join(route, 'weights')):
-            print(f'\tNo model founded for the testing evaluation\n\n')
+            print('\tNo model founded for the testing evaluation\n\n')
             continue
 
         df = pd.read_csv(os.path.join(route, 'results.csv'))
@@ -246,21 +179,11 @@ def main():
             verbose=False,
         )
 
-        YOLO_PRED = YOLO(f'{route}/weights/best.pt')
-
-        rmse = compute_rmse_from_model(
-            model=YOLO_PRED,
-            img_dir=os.path.join(args.data, 'test', 'images'),
-            gt_dir=os.path.join(args.data, 'test', 'labels'),
-            tiled=args.tiled,
-        )
-
         models_output[model]['test_metrics'] = {
             'mAP50': prediction_metrics.box.map50,
             'mAP50-95': prediction_metrics.box.map,
             'precision': prediction_metrics.box.p,
             'recall': prediction_metrics.box.r,
-            'rmse': rmse,
         }
 
         # without any more relevant analysis, its complicated to define which one is the

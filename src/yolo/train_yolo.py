@@ -6,23 +6,28 @@ safely using subprocess, avoiding memory leaks in VRAM and RAM.
 import os
 import time
 import uuid
+import argparse
 import itertools
-
-from src.yolo.utils import *
 
 from ultralytics import YOLO
 
 training_space = {
-    'model': [
-        'yolov8n.pt',
-        'yolo11n.pt',
-        'yolo26n.pt'
-    ],
+    'model': ['yolov8n.pt', 'yolo11n.pt', 'yolo26n.pt'],
     'epochs': [200],
     'batch': [16],
     'seed': [42, 43, 44, 45, 46],
     'box': [5.0],
 }
+
+
+def get_args():
+    parser = argparse.ArgumentParser('Trainer')
+
+    parser.add_argument('--data', required=True, help='Route to .yaml')
+
+    parser.add_argument('--outdir', required=True, help='Output folder')
+
+    return parser.parse_args()
 
 
 def grid_search(space):

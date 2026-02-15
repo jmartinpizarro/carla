@@ -11,7 +11,7 @@ import time
 import argparse
 from pathlib import Path
 
-from moviepy import *
+from moviepy import VideoFileClip
 from tqdm import tqdm
 
 DATA_ORIGIN_ROUTE = 'data/'

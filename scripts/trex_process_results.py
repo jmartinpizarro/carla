@@ -112,11 +112,9 @@ def main():
             pred_boxes = [
                 [x1, y1, x2 - x1, y2 - y1] for x1, y1, x2, y2 in pred_boxes_raw
             ]
-            pred_scores = [
-                p['score'] for p in pred_data['data']['result']['objects']
-            ]
+            _ = [p['score'] for p in pred_data['data']['result']['objects']]
         except Exception:
-            pred_boxes, pred_scores = [], []
+            pred_boxes, _ = [], []
 
         iou, TP, FP, FN = match_boxes(gt_boxes, pred_boxes, args.iou_thr)
         results.append(
