@@ -25,10 +25,7 @@ def draw_trex_predictions(image_path, json_path, output_path):
         return
 
     objects = (
-        predictions[image_name]
-        .get('data', {})
-        .get('result', {})
-        .get('objects', [])
+        predictions[image_name].get('data', {}).get('result', {}).get('objects', [])
     )
 
     for obj in objects:
@@ -56,9 +53,7 @@ def main():
     parser = argparse.ArgumentParser(
         description='Render T-Rex predictions for a given image.'
     )
-    parser.add_argument(
-        '--image', required=True, help='Path to the input image.'
-    )
+    parser.add_argument('--image', required=True, help='Path to the input image.')
     parser.add_argument(
         '--json',
         default='trex_predictions_v2.json',

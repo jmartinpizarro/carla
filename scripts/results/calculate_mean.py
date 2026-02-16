@@ -29,9 +29,11 @@ def sanitize_df(df):
     for col in df.columns:
         if df[col].dtype == object:
             df[col] = df[col].apply(
-                lambda x: np.mean(ast.literal_eval(x))
-                if isinstance(x, str) and x.startswith('[')
-                else x
+                lambda x: (
+                    np.mean(ast.literal_eval(x))
+                    if isinstance(x, str) and x.startswith('[')
+                    else x
+                )
             )
     return df
 
@@ -51,9 +53,7 @@ def main():
         elif 'yolo26n' in str(p):
             models['yolo26n'].append(p)
         else:
-            raise Exception(
-                'Error, a folder does not follow the format expected'
-            )
+            raise Exception('Error, a folder does not follow the format expected')
 
     for model in models.keys():
         print(f'\n\n\t[main] :: Creating mean .csv for {model}\n')
@@ -77,9 +77,7 @@ def main():
             training_mean = pd.concat([training, dummy]).groupby(level=0).mean()
             training = training_mean
 
-            testing_mean = (
-                pd.concat([testing, dummy_test]).groupby(level=0).mean()
-            )
+            testing_mean = pd.concat([testing, dummy_test]).groupby(level=0).mean()
             testing = testing_mean
 
         training.to_csv(f'{model}_training_mean_results.csv', index=True)

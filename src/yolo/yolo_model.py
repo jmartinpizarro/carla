@@ -10,9 +10,7 @@ from ultralytics import YOLO
 
 
 class YoloModel:
-    def __init__(
-        self, model: str, tiled: bool, input_data: str, log_files: str
-    ):
+    def __init__(self, model: str, tiled: bool, input_data: str, log_files: str):
         """
         :param model: str -> Route to the model
         :param tiled: bool -> The model uses tiling or not
@@ -103,18 +101,12 @@ class YoloModel:
                             )
 
                             log_file.write(f'{x1},{y1},{x2},{y2}\n')
-                            cv2.rectangle(
-                                frame, (x1, y1), (x2, y2), (0, 0, 255), 3
-                            )
+                            cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 0, 255), 3)
                     else:
-                        results = YOLO_MODEL(
-                            frame, conf=conf_threshold, iou=iou
-                        )
+                        results = YOLO_MODEL(frame, conf=conf_threshold, iou=iou)
 
                         for r in results:
-                            frame_mask = np.zeros(
-                                (height, width), dtype=np.uint8
-                            )
+                            frame_mask = np.zeros((height, width), dtype=np.uint8)
                             for box in r.boxes:
                                 x1, y1, x2, y2 = map(int, box.xyxy[0])
 
@@ -127,12 +119,8 @@ class YoloModel:
                                 )
 
                                 log_file.write(f'{x1},{y1},{x2},{y2}\n')
-                                cv2.rectangle(
-                                    frame, (x1, y1), (x2, y2), (0, 0, 255), 3
-                                )
-                    log_file.write(
-                        f'\nMean Coverage: {np.mean(coverage_historic)}\n'
-                    )
+                                cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 0, 255), 3)
+                    log_file.write(f'\nMean Coverage: {np.mean(coverage_historic)}\n')
                 except Exception as e:
                     print(
                         f'[YoloModel] :: An error has ocurred when writing the predictions:\n{e}\n'

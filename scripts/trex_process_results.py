@@ -105,9 +105,7 @@ def main():
 
         # predicted boxes (T-Rex outputs x1,y1,x2,y2)
         try:
-            pred_boxes_raw = [
-                p['bbox'] for p in pred_data['data']['result']['objects']
-            ]
+            pred_boxes_raw = [p['bbox'] for p in pred_data['data']['result']['objects']]
             # Convert [x1,y1,x2,y2] → [x,y,w,h]
             pred_boxes = [
                 [x1, y1, x2 - x1, y2 - y1] for x1, y1, x2, y2 in pred_boxes_raw
@@ -117,9 +115,7 @@ def main():
             pred_boxes, _ = [], []
 
         iou, TP, FP, FN = match_boxes(gt_boxes, pred_boxes, args.iou_thr)
-        results.append(
-            {'image': img_name, 'IOU': iou, 'TP': TP, 'FP': FP, 'FN': FN}
-        )
+        results.append({'image': img_name, 'IOU': iou, 'TP': TP, 'FP': FP, 'FN': FN})
 
         if iou is not None:
             total_iou.append(iou)

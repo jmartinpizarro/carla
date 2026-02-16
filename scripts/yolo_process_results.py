@@ -15,9 +15,7 @@ STRIDE = 160
 
 
 def get_args():
-    parser = argparse.ArgumentParser(
-        description='YOLO and YOLO-mods Results Renderer'
-    )
+    parser = argparse.ArgumentParser(description='YOLO and YOLO-mods Results Renderer')
 
     parser.add_argument(
         '--data',
@@ -208,9 +206,7 @@ def main():
         training_csv_path = os.path.join(
             f'{TESTING_EXPORT_DIR}/{model}', f'{model}_training_metrics.csv'
         )
-        models_output[model]['training_metrics'].to_csv(
-            training_csv_path, index=False
-        )
+        models_output[model]['training_metrics'].to_csv(training_csv_path, index=False)
 
         # Test metrics → CSV
         test_metrics_df = pd.DataFrame([models_output[model]['test_metrics']])

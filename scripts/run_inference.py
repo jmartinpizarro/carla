@@ -8,9 +8,7 @@ from src.yolo.yolo_model import YoloModel
 def get_args():
     parser = argparse.ArgumentParser('PoC Inference')
 
-    parser.add_argument(
-        '--model', required=True, help='The route to the .pt model'
-    )
+    parser.add_argument('--model', required=True, help='The route to the .pt model')
 
     parser.add_argument(
         '--tiled',

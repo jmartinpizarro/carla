@@ -33,9 +33,7 @@ def get_args():
 def grid_search(space):
     """Generate all possible combinations for the training space"""
     keys = list(space.keys())
-    values = (
-        space[k] if isinstance(space[k], list) else [space[k]] for k in keys
-    )
+    values = (space[k] if isinstance(space[k], list) else [space[k]] for k in keys)
     for combo in itertools.product(*values):
         yield dict(zip(keys, combo))
 

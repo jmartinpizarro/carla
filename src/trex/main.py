@@ -11,9 +11,7 @@ import os
 import requests
 
 CREATE_TASK_API_URL = 'https://api.deepdataspace.com/v2/task/trex/detection'
-QUERY_TASK_API_URL = (
-    'https://api.deepdataspace.com/v2/task_status'  # + /{task_uuid}
-)
+QUERY_TASK_API_URL = 'https://api.deepdataspace.com/v2/task_status'  # + /{task_uuid}
 # this image is used for giving T-Rex2 some information about the phenotype of the plant
 HELPER_IMAGE = 'data/v2/train/YDRAY-DJI_20250515124024_0043_D_MP4_9_png.rf.2011ae1ea7b1957576b167dd857131fc.jpg'
 
@@ -64,9 +62,7 @@ def main():
     images = [f for f in os.listdir(args.input_dir) if f.endswith('.jpg')]
 
     helper_filename = os.path.basename(HELPER_IMAGE)
-    helper_image_route = os.path.join(
-        args.input_dir, os.path.basename(HELPER_IMAGE)
-    )
+    helper_image_route = os.path.join(args.input_dir, os.path.basename(HELPER_IMAGE))
 
     predictions = {}
 
@@ -87,9 +83,7 @@ def main():
         # next(filter()) returns the first element where the condition is true
         # filter(condition, iterableObject)
         helper_image_id = next(
-            filter(
-                lambda x: x['file_name'] == helper_filename, labels['images']
-            )
+            filter(lambda x: x['file_name'] == helper_filename, labels['images'])
         )['id']
 
         # take the box labels info from the helper image
@@ -108,9 +102,7 @@ def main():
         for box in helper_boxes:
             box_copy = box.copy()  # copy dict
             box_copy['type'] = 'rect'
-            box_copy['rect'] = box_copy[
-                'bbox'
-            ]  # don't use pop, can cause error
+            box_copy['rect'] = box_copy['bbox']  # don't use pop, can cause error
             del box_copy['bbox']  # this is optional
             helper_boxes_copy.append(box_copy)
 
@@ -174,16 +166,12 @@ def main():
                 f'\t{e}',
             )
 
-    with open(
-        os.path.join(args.output_dir, 'trex_predictions_v2.json'), 'w'
-    ) as fp:
+    with open(os.path.join(args.output_dir, 'trex_predictions_v2.json'), 'w') as fp:
         json.dump(predictions, fp)
 
     end = time.time()
 
-    print(
-        '[T-Rex 2 Inference] :: All possible predictions has been obtained!\n'
-    )
+    print('[T-Rex 2 Inference] :: All possible predictions has been obtained!\n')
     print('\tThe program has lasted a total of: %s seconds\n' % (end - start))
 
     return 1

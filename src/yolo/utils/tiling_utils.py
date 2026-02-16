@@ -7,9 +7,7 @@ import torch
 from torchvision.ops import nms
 
 
-def process_frame_with_grids(
-    frame, model, conf_threshold=0.4, save_debug=False
-):
+def process_frame_with_grids(frame, model, conf_threshold=0.4, save_debug=False):
     """
     Process a frame converted into a grid. The inference processes all grids
     @param frame: cv2 Object
@@ -29,9 +27,7 @@ def process_frame_with_grids(
 
         if r.boxes is None or len(r.boxes) == 0:
             if save_debug:
-                cv2.imwrite(
-                    f'debug_tiles/grid_{idx}_predicted.png', grid_with_boxes
-                )
+                cv2.imwrite(f'debug_tiles/grid_{idx}_predicted.png', grid_with_boxes)
             continue
 
         boxes = r.boxes.xyxy.cpu()
@@ -64,9 +60,7 @@ def process_frame_with_grids(
             all_classes.append(cls)
 
         if save_debug:
-            cv2.imwrite(
-                f'debug_tiles/grid_{idx}_predicted.png', grid_with_boxes
-            )
+            cv2.imwrite(f'debug_tiles/grid_{idx}_predicted.png', grid_with_boxes)
 
     if len(all_boxes) == 0:
         return [], [], []
@@ -77,9 +71,7 @@ def process_frame_with_grids(
 
     # merge boxes that are adjacent - this happens because of how our grid-based
     # inference work
-    boxes, scores, classes = merge_adjacent_boxes(
-        boxes, scores, classes, margin=5
-    )
+    boxes, scores, classes = merge_adjacent_boxes(boxes, scores, classes, margin=5)
 
     # apply nms to assure that no duplicates are remained
     keep = nms(boxes, scores, iou_threshold=0.3)
