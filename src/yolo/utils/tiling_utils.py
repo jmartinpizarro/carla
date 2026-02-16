@@ -7,12 +7,14 @@ import torch
 from torchvision.ops import nms
 
 
-def process_frame_with_grids(frame, model, conf_threshold=0.4, save_debug=False):
+def process_frame_with_grids(
+    frame, model, conf_threshold=0.4, save_debug=False, grid_size=640
+):
     """
     Process a frame converted into a grid. The inference processes all grids
     @param frame: cv2 Object
     """
-    grids, offsets = generate_grid(frame)
+    grids, offsets = generate_grid(frame, grid_size=grid_size)
 
     # BATCH INFERENCE
     batch_results = model(grids, conf=conf_threshold, verbose=False)
@@ -20,6 +22,7 @@ def process_frame_with_grids(frame, model, conf_threshold=0.4, save_debug=False)
     all_boxes = []
     all_scores = []
     all_classes = []
+    all_tile_indices = []
 
     for idx, (r, (ox, oy)) in enumerate(zip(batch_results, offsets)):
         if save_debug:
@@ -58,6 +61,7 @@ def process_frame_with_grids(frame, model, conf_threshold=0.4, save_debug=False)
             all_boxes.append([x1 + ox, y1 + oy, x2 + ox, y2 + oy])
             all_scores.append(score)
             all_classes.append(cls)
+            all_tile_indices.append((oy // grid_size, ox // grid_size))
 
         if save_debug:
             cv2.imwrite(f'debug_tiles/grid_{idx}_predicted.png', grid_with_boxes)
@@ -71,7 +75,14 @@ def process_frame_with_grids(frame, model, conf_threshold=0.4, save_debug=False)
 
     # merge boxes that are adjacent - this happens because of how our grid-based
     # inference work
-    boxes, scores, classes = merge_adjacent_boxes(boxes, scores, classes, margin=5)
+    boxes, scores, classes = merge_adjacent_boxes_across_tiles(
+        boxes,
+        scores,
+        classes,
+        all_tile_indices,
+        grid_size=grid_size,
+        margin=5,
+    )
 
     # apply nms to assure that no duplicates are remained
     keep = nms(boxes, scores, iou_threshold=0.3)
@@ -138,10 +149,62 @@ def are_adjacent(box1, box2, margin=5):
     )
 
 
-def merge_adjacent_boxes(boxes, scores, classes, margin=5):
+def are_adjacent_across_tiles(box1, tile1, box2, tile2, grid_size=640, margin=5):
+    """Check adjacency only across neighboring tiles (4-neighbors)."""
+    r1, c1 = tile1
+    r2, c2 = tile2
+
+    dr = r2 - r1
+    dc = c2 - c1
+
+    if abs(dr) + abs(dc) != 1:
+        return False
+
+    x1_1, y1_1, x2_1, y2_1 = box1
+    x1_2, y1_2, x2_2, y2_2 = box2
+
+    tile1_x0 = c1 * grid_size
+    tile1_y0 = r1 * grid_size
+    tile1_x1 = tile1_x0 + grid_size
+    tile1_y1 = tile1_y0 + grid_size
+
+    tile2_x0 = c2 * grid_size
+    tile2_y0 = r2 * grid_size
+    tile2_x1 = tile2_x0 + grid_size
+    tile2_y1 = tile2_y0 + grid_size
+
+    if dc == 1:
+        left_touch = x2_1 >= tile1_x1 - margin
+        right_touch = x1_2 <= tile2_x0 + margin
+        overlap = not (y2_1 < y1_2 - margin or y2_2 < y1_1 - margin)
+        return left_touch and right_touch and overlap
+
+    if dc == -1:
+        left_touch = x2_2 >= tile2_x1 - margin
+        right_touch = x1_1 <= tile1_x0 + margin
+        overlap = not (y2_1 < y1_2 - margin or y2_2 < y1_1 - margin)
+        return left_touch and right_touch and overlap
+
+    if dr == 1:
+        top_touch = y2_1 >= tile1_y1 - margin
+        bottom_touch = y1_2 <= tile2_y0 + margin
+        overlap = not (x2_1 < x1_2 - margin or x2_2 < x1_1 - margin)
+        return top_touch and bottom_touch and overlap
+
+    if dr == -1:
+        top_touch = y2_2 >= tile2_y1 - margin
+        bottom_touch = y1_1 <= tile1_y0 + margin
+        overlap = not (x2_1 < x1_2 - margin or x2_2 < x1_1 - margin)
+        return top_touch and bottom_touch and overlap
+
+    return False
+
+
+def merge_adjacent_boxes_across_tiles(
+    boxes, scores, classes, tile_indices, grid_size=640, margin=5
+):
     """
-    Merges two boxes if they are adyacent each other. It can apply a margin to
-    reduce errors
+    Merges adyacent boxes only across neighboring tiles to avoid snowball growth.
     """
     if len(boxes) == 0:
         return boxes, scores, classes
@@ -150,42 +213,47 @@ def merge_adjacent_boxes(boxes, scores, classes, margin=5):
     scores = scores.clone()
     classes = classes.clone()
 
+    visited = set()
     merged = []
     merged_scores = []
     merged_classes = []
-    used = set()
 
     for i in range(len(boxes)):
-        if i in used:
+        if i in visited:
             continue
 
-        current_box = boxes[i].clone()
-        current_score = scores[i]
-        current_class = classes[i]
-        group = [i]
+        stack = [i]
+        component = []
+        visited.add(i)
 
-        # Search for adyacent boxes
-        for j in range(i + 1, len(boxes)):
-            if j in used:
-                continue
+        while stack:
+            idx = stack.pop()
+            component.append(idx)
 
-            if are_adjacent(current_box, boxes[j], margin):
-                # expand the current box so the new one can be merged
-                current_box[0] = min(current_box[0], boxes[j][0])  # x1
-                current_box[1] = min(current_box[1], boxes[j][1])  # y1
-                current_box[2] = max(current_box[2], boxes[j][2])  # x2
-                current_box[3] = max(current_box[3], boxes[j][3])  # y2
+            for j in range(len(boxes)):
+                if j in visited:
+                    continue
+                if classes[j] != classes[idx]:
+                    continue
+                if are_adjacent_across_tiles(
+                    boxes[idx],
+                    tile_indices[idx],
+                    boxes[j],
+                    tile_indices[j],
+                    grid_size=grid_size,
+                    margin=margin,
+                ):
+                    visited.add(j)
+                    stack.append(j)
 
-                # the maximum score is taken because both predictions are correct
-                # thus both are valid. We take the best one.
-                current_score = max(current_score, scores[j])
-                group.append(j)
-                used.add(j)
-
-        merged.append(current_box)
-        merged_scores.append(current_score)
-        merged_classes.append(current_class)
-        used.add(i)
+        comp_boxes = boxes[component]
+        x1 = torch.min(comp_boxes[:, 0])
+        y1 = torch.min(comp_boxes[:, 1])
+        x2 = torch.max(comp_boxes[:, 2])
+        y2 = torch.max(comp_boxes[:, 3])
+        merged.append(torch.tensor([x1, y1, x2, y2]))
+        merged_scores.append(torch.max(scores[component]))
+        merged_classes.append(classes[component[0]])
 
     return (
         torch.stack(merged),
