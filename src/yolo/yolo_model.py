@@ -7,6 +7,8 @@ from src.yolo.utils.tiling_utils import process_frame_with_grids
 import cv2
 import numpy as np
 from ultralytics import YOLO
+import matplotlib.pyplot as plt
+from sklearn.neighbors import KernelDensity
 
 
 class YoloModel:
@@ -52,6 +54,7 @@ class YoloModel:
             frames = [frame]
 
         frame_count = 0
+        r_boxes = {}
 
         if self.log_files is not None:
             try:
@@ -86,12 +89,10 @@ class YoloModel:
                             frame, YOLO_MODEL, conf_threshold
                         )
                         frame_mask = np.zeros((height, width), dtype=np.uint8)
+                        r_boxes.setdefault(frame_count, [])
                         for box in boxes:
                             x1, y1, x2, y2 = map(int, box)
-
-                            # calculate total coverage: given a matrix of the
-                            # size of the image, populate with ones the places
-                            # where a box is placed
+                            r_boxes[frame_count].append([x1, y1, x2, y2])
 
                             frame_mask[y1:y2, x1:x2] = 1
                             coverage_historic = np.insert(
@@ -105,12 +106,13 @@ class YoloModel:
                     else:
                         results = YOLO_MODEL(frame, conf=conf_threshold, iou=iou)
 
+                        r_boxes.setdefault(frame_count, [])
                         for r in results:
                             frame_mask = np.zeros((height, width), dtype=np.uint8)
                             for box in r.boxes:
                                 x1, y1, x2, y2 = map(int, box.xyxy[0])
+                                r_boxes[frame_count].append([x1, y1, x2, y2])
 
-                                # same code for coverage
                                 frame_mask[y1:y2, x1:x2] = 1
                                 coverage_historic = np.insert(
                                     coverage_historic,
@@ -136,12 +138,12 @@ class YoloModel:
                     print(
                         f'Processed {frame_count}/{total_frames} frames ({100 * frame_count / total_frames:.1f}%)'
                     )
-                cv2.imshow('YOLO Video Prediction', frame)
-                if cv2.waitKey(1) & 0xFF == ord('q'):
-                    break
+                # cv2.imshow('YOLO Video Prediction', frame)
+                # if cv2.waitKey(1) & 0xFF == ord('q'):
+                #    break
             else:
                 cv2.imwrite('output.jpg', frame)
-                cv2.imshow('YOLO Prediction', frame)
+                # cv2.imshow('YOLO Prediction', frame)
                 cv2.waitKey(0)
                 frame_count += 1
 
@@ -154,5 +156,94 @@ class YoloModel:
 
         cv2.destroyAllWindows()
 
+        return r_boxes
+
     def write_predictions(self):
         pass
+
+    def generate_density_heatmap(
+        self, gdf_metric, bandwidths=[1.0, 2.0, 5.0], frame: int = 0
+    ):
+        """
+        Generates a KDE (heatmap density map) with different physical radius. The idea is to
+        group all the possible detections (positions) of a single detection (frame)
+        into a plot.
+
+        :gdf_metric: GeoDataFrame with geometry in EPSG:3857 (metric)
+        :bandwidths: list with radius for plotting
+        :frame: int -> by default 0, assuming it is an image. Done in order to not overwrite
+        the contents and be able to iterate for making a video
+        """
+        # extract coordinates
+        coords = np.vstack([gdf_metric.geometry.x, gdf_metric.geometry.y]).T
+
+        print('\n[yolo_model] :: KDE Analysis config:')
+        print(f'\t-Total detections: {len(coords)}')
+        print(
+            f'\t-X axis Range: {coords[:, 0].min():.1f} to {coords[:, 0].max():.1f} meters'
+        )
+        print(
+            f'\t-Y axis Range: {coords[:, 1].min():.1f} to {coords[:, 1].max():.1f} meters'
+        )
+        print(f'\t-Radius: {bandwidths} meters\n')
+
+        # create grid delimiters (5 offset works fine in this case, bigger numbers)
+        # may break the plot a little bit
+        x_min, x_max = coords[:, 0].min() - 5, coords[:, 0].max() + 5
+        y_min, y_max = coords[:, 1].min() - 5, coords[:, 1].max() + 5
+
+        xx, yy = np.mgrid[
+            x_min:x_max:50j, y_min:y_max:50j
+        ]  # Reducido de 100j a 50j para ahorrar memoria
+        positions = np.vstack([xx.ravel(), yy.ravel()]).T
+
+        # create a figure per bandwidth
+        n_bw = len(bandwidths)
+        fig, axes = plt.subplots(1, n_bw, figsize=(8 * n_bw, 8))
+        if n_bw == 1:
+            axes = [axes]
+
+        for ax, bandwidth in zip(axes, bandwidths):
+            # KDE with radius
+            kde = KernelDensity(bandwidth=bandwidth, kernel='gaussian')
+            kde.fit(coords)
+
+            # evaluate density
+            density = np.exp(kde.score_samples(positions))
+            density = density.reshape(xx.shape)
+
+            # heatmap
+            levels = np.linspace(density.min(), density.max(), 15)
+            contour = ax.contourf(
+                xx, yy, density, levels=levels, cmap='YlOrRd', alpha=0.8
+            )
+
+            ax.scatter(
+                coords[:, 0],
+                coords[:, 1],
+                s=20,
+                color='blue',
+                alpha=0.5,
+                edgecolors='darkblue',
+                linewidth=0.5,
+                label=f'Detections (n={len(coords)})',
+            )
+
+            ax.set_xlabel('X (meters, EPSG:3857)', fontsize=10)
+            ax.set_ylabel('Y (meters, EPSG:3857)', fontsize=10)
+            ax.set_title(f'KDE - Radius: {bandwidth}m', fontsize=12, fontweight='bold')
+            ax.legend(loc='upper right', fontsize=9)
+
+            # Colorbar
+            cbar = plt.colorbar(contour, ax=ax)
+            cbar.set_label('Density (predictions/m²)', fontsize=9)
+
+            # Grid
+            ax.grid(True, alpha=0.3)
+
+        plt.tight_layout()
+        plt.savefig(
+            f'kde_plots/density_heatmap_kde_{frame}.png', dpi=150, bbox_inches='tight'
+        )
+        plt.close(fig)  # Libera memoria de la figura
+        # plt.show()

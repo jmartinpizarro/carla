@@ -81,7 +81,7 @@ class UnitConversor:
 
         # pixel into normalised coordinates
         x_n = (u - cx) / fx
-        y_n = (v - cy) / fy
+        y_n = -(v - cy) / fy
 
         # nadir -> if 90 degrees wrt the ground, it is possible to
         # calculate the displacement
