@@ -6,6 +6,8 @@ from src.yolo.utils.tiling_utils import process_frame_with_grids
 
 import cv2
 import numpy as np
+import os
+from pyproj import Geod
 from ultralytics import YOLO
 import matplotlib.pyplot as plt
 from sklearn.neighbors import KernelDensity
@@ -247,3 +249,71 @@ class YoloModel:
         )
         plt.close(fig)  # Libera memoria de la figura
         # plt.show()
+
+    def generate_simple_circle_plot(
+        self,
+        center_lats,
+        center_lons,
+        ref_lats,
+        ref_lons,
+        frame: int = 0,
+        output_dir: str = 'simple_plots',
+        coverage: float = None,
+    ):
+        if len(center_lats) == 0:
+            return
+
+        os.makedirs(output_dir, exist_ok=True)
+        geod = Geod(ellps='WGS84')
+
+        center_lats = np.asarray(center_lats, dtype=float)
+        center_lons = np.asarray(center_lons, dtype=float)
+        ref_lats = np.asarray(ref_lats, dtype=float)
+        ref_lons = np.asarray(ref_lons, dtype=float)
+
+        _, _, distances = geod.inv(center_lons, center_lats, ref_lons, ref_lats)
+
+        mean_radius = np.mean(distances) if len(distances) > 0 else 0.0
+
+        fig, ax = plt.subplots(figsize=(10, 10))
+        ax.scatter(
+            center_lons,
+            center_lats,
+            s=30,
+            color='blue',
+            alpha=0.7,
+            label=f'Centers (n={len(center_lats)})',
+            edgecolors='darkblue',
+            linewidth=0.5,
+        )
+
+        angles = np.linspace(0, 360, 100)
+        for lon, lat, radius in zip(center_lons, center_lats, distances):
+            circle_lons = []
+            circle_lats = []
+            for angle in angles:
+                lon_c, lat_c, _ = geod.fwd(lon, lat, angle, radius)
+                circle_lons.append(lon_c)
+                circle_lats.append(lat_c)
+            ax.plot(circle_lons, circle_lats, color='red', alpha=0.6, linewidth=0.9)
+
+        ax.set_xlabel('Longitude (EPSG:4326)', fontsize=22)
+        ax.set_ylabel('Latitude (EPSG:4326)', fontsize=22)
+        ax.tick_params(axis='both', labelsize=18)
+        ax.tick_params(axis='x', labelrotation=45)
+
+        title_str = (
+            f'Detections with Radius (lat/lon) | Mean radius: {mean_radius:.2f} m'
+        )
+        if coverage is not None:
+            title_str += f' | Coverage: {coverage:.2f}%'
+
+        # ax.set_title(title_str, fontsize=15, fontweight='bold')
+        ax.grid(True, alpha=0.3)
+        ax.legend(loc='upper right', fontsize=18)
+
+        plt.tight_layout()
+        plt.savefig(
+            f'{output_dir}/simple_plot_{frame}.png', dpi=150, bbox_inches='tight'
+        )
+        plt.close(fig)
