@@ -1,0 +1,11 @@
+model:
+  - 'yolov8n.pt'
+  - 'yolo11n.pt'
+  - 'yolo26n.pt'
+epochs: 200
+batch: 16
+min_seed: 42
+max_seed: 46
+box: 5.0
+tiled: True
+results_folder: "testing_training"
