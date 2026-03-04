@@ -46,6 +46,48 @@ class UnitConversor:
     def update_drone_pos(self, value: Tuple[float, float]):
         self.drone_pos = value
 
+    def _pixel_to_latlon(self, u, v):
+        u_t = torch.as_tensor(u, dtype=torch.float32)
+        v_t = torch.as_tensor(v, dtype=torch.float32)
+
+        cx = self.resolution[0] / 2
+        cy = self.resolution[1] / 2
+
+        fov_x_rad = math.radians(self.fov)
+        fx = cx / math.tan(fov_x_rad / 2)
+
+        fov_y_rad = 2 * math.atan(
+            (self.resolution[1] / self.resolution[0]) * math.tan(fov_x_rad / 2)
+        )
+        fy = cy / math.tan(fov_y_rad / 2)
+
+        x_n = (u_t - cx) / fx
+        y_n = -(v_t - cy) / fy
+
+        dx = self.rel_altitude * x_n
+        dy = self.rel_altitude * y_n
+
+        r_yaw = math.radians(self.gb_yaw)
+        x = (dx * math.cos(r_yaw)) - (dy * math.sin(r_yaw))
+        y = (dx * math.sin(r_yaw)) + (dy * math.cos(r_yaw))
+
+        lat0, lon0 = self.drone_pos
+
+        utm_epsg = self._get_utm_zone(lon0, lat0)
+        utm_crs = CRS.from_epsg(utm_epsg)
+
+        to_utm = Transformer.from_crs('EPSG:4326', utm_crs, always_xy=True)
+        to_wgs84 = Transformer.from_crs(utm_crs, 'EPSG:4326', always_xy=True)
+
+        x0, y0 = to_utm.transform(lon0, lat0)
+
+        x_new = x0 + x
+        y_new = y0 + y
+
+        lon_new, lat_new = to_wgs84.transform(x_new.tolist(), y_new.tolist())
+
+        return torch.tensor(lat_new), torch.tensor(lon_new)
+
     def _get_utm_zone(self, lon, lat):
         """
         Calculate the UTM zone EPSG code for a given lat/lon
@@ -62,53 +104,10 @@ class UnitConversor:
         """
         :return: Tuple[float, float] -> (lat, lon)
         """
-        # the position to calculate is going to be done with respect to
-        # the pixel that is considered the center of the box
-        u = (self.boxes[:, 0] + self.boxes[:, 2]) / 2  # axis x
-        v = (self.boxes[:, 1] + self.boxes[:, 3]) / 2  # axis y
+        u = (self.boxes[:, 0] + self.boxes[:, 2]) / 2
+        v = (self.boxes[:, 1] + self.boxes[:, 3]) / 2
 
-        # Aproximated intrinsec of the FOV
-        cx = self.resolution[0] / 2
-        cy = self.resolution[1] / 2
+        return self._pixel_to_latlon(u, v)
 
-        fov_x_rad = math.radians(self.fov)
-        fx = cx / math.tan(fov_x_rad / 2)
-
-        fov_y_rad = 2 * math.atan(
-            (self.resolution[1] / self.resolution[0]) * math.tan(fov_x_rad / 2)
-        )
-        fy = cy / math.tan(fov_y_rad / 2)
-
-        # pixel into normalised coordinates
-        x_n = (u - cx) / fx
-        y_n = -(v - cy) / fy
-
-        # nadir -> if 90 degrees wrt the ground, it is possible to
-        # calculate the displacement
-        dx = self.rel_altitude * x_n
-        dy = self.rel_altitude * y_n
-
-        r_yaw = math.radians(self.gb_yaw)
-        x = (dx * math.cos(r_yaw)) - (dy * math.sin(r_yaw))  # east (E)
-        y = (dx * math.sin(r_yaw)) + (dy * math.cos(r_yaw))  # north (N)
-
-        lat0, lon0 = self.drone_pos
-
-        # automatic UTM depending on position
-        utm_epsg = self._get_utm_zone(lon0, lat0)
-        utm_crs = CRS.from_epsg(utm_epsg)
-
-        to_utm = Transformer.from_crs('EPSG:4326', utm_crs, always_xy=True)
-        to_wgs84 = Transformer.from_crs(utm_crs, 'EPSG:4326', always_xy=True)
-
-        # drone_position -> UTM
-        x0, y0 = to_utm.transform(lon0, lat0)
-
-        # add displacement
-        x_new = x0 + x
-        y_new = y0 + y
-
-        # transform again
-        lon_new, lat_new = to_wgs84.transform(x_new.tolist(), y_new.tolist())
-
-        return torch.tensor(lat_new), torch.tensor(lon_new)
+    def calc_rw_positions_pixels(self, u, v):
+        return self._pixel_to_latlon(u, v)

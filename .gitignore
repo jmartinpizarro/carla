@@ -210,6 +210,9 @@ data/
 results_*/
 !yolo_test_results_*
 runs/
+simple_plots/*
+*.mp4
+*.pred
 
 # latex compilation shit
 *.aux
