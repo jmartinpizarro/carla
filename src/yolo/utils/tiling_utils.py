@@ -15,20 +15,34 @@ def _sync_cuda_for_timing():
 
 
 def process_frame_with_grids(
-    frame, model, conf_threshold=0.4, save_debug=False, grid_size=640
+    frame,
+    model,
+    conf_threshold=0.4,
+    save_debug=False,
+    grid_size=640,
+    batch_size=2,
 ):
     """
-    Process a frame converted into a grid. The inference processes all grids. Returns the latency
+    Process a frame converted into a grid. Inference is executed in mini-batches
+    of tiles and returns the latency.
     @param frame: cv2 Object
     """
     grids, offsets = generate_grid(frame, grid_size=grid_size)
+    batch_size = max(1, int(batch_size))
 
     t_latency: float = 0.0
 
-    # BATCH INFERENCE
+    # BATCH INFERENCE (chunked)
     _sync_cuda_for_timing()
     t_inf_start = time.perf_counter()
-    batch_results = model(grids, conf=conf_threshold, verbose=False)
+
+    batch_results = []
+    for batch_start in range(0, len(grids), batch_size):
+        batch_end = min(batch_start + batch_size, len(grids))
+        grid_batch = grids[batch_start:batch_end]
+        partial_results = model(grid_batch, conf=conf_threshold, verbose=False)
+        batch_results.extend(partial_results)
+
     _sync_cuda_for_timing()
     t_inf_end = time.perf_counter()
     t_inf_latency = t_inf_end - t_inf_start
@@ -91,7 +105,7 @@ def process_frame_with_grids(
 
     if len(all_boxes) == 0:
         t_postprocessing_latency = time.perf_counter() - t_postprocessing_start
-        return [], [], [], round(t_inf_latency + t_postprocessing_latency, 4)
+        return [], [], [], t_inf_latency + t_postprocessing_latency
 
     boxes = torch.cat(all_boxes, dim=0).cpu()
     scores = torch.cat(all_scores, dim=0).cpu()
@@ -118,7 +132,7 @@ def process_frame_with_grids(
     t_postprocessing_end = time.perf_counter()
     t_postprocessing_latency = t_postprocessing_end - t_postprocessing_start
 
-    t_latency = round(t_inf_latency + t_postprocessing_latency, 4)
+    t_latency = t_inf_latency + t_postprocessing_latency
 
     return boxes, scores, classes, t_latency
 

@@ -34,7 +34,8 @@ def main():
     if not pt_path.exists():
         raise FileNotFoundError(pt_path)
 
-    batch = 6 if args.tiled else 1
+    # batch inference on the jetson is going to be done 2-2-2 (6 tiles)
+    batch = 2 if args.tiled else 1
 
     # bcs of how the YOLO wrapper works, it is fucking broken. First, it is needed to create
     # a .onnx file and then transform it into the .engine
@@ -60,13 +61,6 @@ def main():
         '--fp16',
         '--memPoolSize=workspace:4096MiB',
     ]
-
-    if batch > 1:
-        cmd += [
-            '--minShapes=images:1x3x640x640',
-            f'--optShapes=images:{batch}x3x640x640',
-            f'--maxShapes=images:{batch}x3x640x640',
-        ]
 
     subprocess.run(cmd, check=True)
     print(f'Engine created at: {engine_path}')

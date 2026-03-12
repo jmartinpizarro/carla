@@ -5,12 +5,13 @@ import cv2
 import time
 
 ENGINE_PATH = (
-    'results_yolo_lowFlight_v11/yolov8n_e200_b16_s42_box5.0_d59ef/weights/best.engine'
+    'results_yolo_tiled_v2/yolov8n_e200_b16_s42_box5.0_93bb6/weights/best.engine'
 )
 VIDEO_PATH = 'data/DJI_20260213114207_0018_D.MP4'
 CONF_THRESHOLD = 0.5
-TILED = False  # Set to True for tiled inference, False for full-frame inference
+TILED = True  # Set to True for tiled inference, False for full-frame inference
 GRID_SIZE = 640
+REQUESTED_BATCH_SIZE = 3
 
 
 def load_engine(engine_path):
@@ -36,6 +37,42 @@ def allocate_buffers(engine):
         else:
             outputs[name] = (host_mem, device_mem)
     return inputs, outputs, stream
+
+
+def get_input_output_names(engine):
+    """Return first input/output tensor names from the engine."""
+    input_name = None
+    output_name = None
+    for name in engine:
+        mode = engine.get_tensor_mode(name)
+        if mode == trt.TensorIOMode.INPUT and input_name is None:
+            input_name = name
+        elif mode == trt.TensorIOMode.OUTPUT and output_name is None:
+            output_name = name
+
+    if input_name is None or output_name is None:
+        raise RuntimeError('No se pudieron identificar los tensores de entrada/salida.')
+
+    return input_name, output_name
+
+
+def get_engine_batch_size(engine, input_name):
+    """Infer the batch size supported by the engine for the input tensor."""
+    shape = tuple(engine.get_tensor_shape(input_name))
+    if len(shape) >= 1 and shape[0] > 0:
+        return int(shape[0])
+
+    # Dynamic shape fallback: use max profile shape
+    try:
+        _, _, max_shape = engine.get_tensor_profile_shape(input_name, 0)
+        if len(max_shape) >= 1 and max_shape[0] > 0:
+            return int(max_shape[0])
+    except Exception:
+        pass
+
+    raise RuntimeError(
+        f'No se pudo inferir batch size del engine para {input_name}. shape={shape}'
+    )
 
 
 def generate_grids(image, grid_size=640):
@@ -77,15 +114,34 @@ def preprocess(frame):
     return img
 
 
+def preprocess_batch(frames):
+    """Preprocess multiple frames into a batch. Returns shape (batch_size, 3, 640, 640)"""
+    batch = []
+    for frame in frames:
+        img = cv2.resize(frame, (640, 640))
+        img = img[:, :, ::-1]
+        img = img.astype(np.float32) / 255.0
+        img = np.transpose(img, (2, 0, 1))
+        batch.append(img)
+    batch = np.stack(batch, axis=0)
+    return batch
+
+
 def infer(context, inputs, outputs, stream, img_batch):
     """
     Perform inference on a batch of images.
     img_batch: numpy array of shape (batch_size, 3, 640, 640)
     """
     input_name = list(inputs.keys())[0]
+    output_name = list(outputs.keys())[0]
 
     # Copy input to GPU
     img_flat = img_batch.ravel()
+    if img_flat.size != inputs[input_name][0].size:
+        raise ValueError(
+            f'Batch incompatible con el engine. input_elems={img_flat.size}, '
+            f'buffer_elems={inputs[input_name][0].size}'
+        )
     np.copyto(inputs[input_name][0], img_flat)
     cuda.memcpy_htod_async(inputs[input_name][1], inputs[input_name][0], stream)
 
@@ -95,11 +151,36 @@ def infer(context, inputs, outputs, stream, img_batch):
         context.set_tensor_address(name, int(device_mem))
 
     context.execute_async_v3(stream_handle=stream.handle)
-    output_name = list(outputs.keys())[0]
     cuda.memcpy_dtoh_async(outputs[output_name][0], outputs[output_name][1], stream)
     stream.synchronize()
 
-    return outputs[output_name][0]
+    return outputs[output_name][0].copy()
+
+
+def _build_engine_batch(valid_batch, engine_batch_size):
+    """Pad a valid batch to engine batch size (fixed-shape engines)."""
+    valid_count = valid_batch.shape[0]
+    if valid_count == engine_batch_size:
+        return valid_batch, valid_count
+
+    pad_count = engine_batch_size - valid_count
+    pad_tile = valid_batch[-1:, ...]
+    pad_batch = np.repeat(pad_tile, pad_count, axis=0)
+    return np.concatenate([valid_batch, pad_batch], axis=0), valid_count
+
+
+def _split_output_per_item(output_batch, engine_batch_size):
+    """Split flattened output into one chunk per batch item."""
+    if output_batch.size % engine_batch_size != 0:
+        raise ValueError(
+            f'Output inválido: size={output_batch.size}, batch={engine_batch_size}'
+        )
+
+    elems_per_item = output_batch.size // engine_batch_size
+    return [
+        output_batch[i * elems_per_item : (i + 1) * elems_per_item]
+        for i in range(engine_batch_size)
+    ]
 
 
 def postprocess(output, orig_h, orig_w, conf_threshold=CONF_THRESHOLD):
@@ -211,84 +292,182 @@ def draw(frame, boxes):
     return frame
 
 
+def process_grids_batched(
+    grids,
+    offsets,
+    context,
+    inputs,
+    outputs,
+    stream,
+    orig_h,
+    orig_w,
+    engine_batch_size,
+    requested_batch_size=REQUESTED_BATCH_SIZE,
+    conf_threshold=CONF_THRESHOLD,
+):
+    """
+    Process grids in batches and return combined detections.
+
+    Args:
+        grids: list of grid images
+        offsets: list of (x, y) offsets for each grid
+        engine_batch_size: fixed batch size expected by TensorRT engine
+        requested_batch_size: desired number of valid tiles per chunk
+
+    Returns:
+        list of boxes in original frame coordinates
+    """
+    all_boxes = []
+    chunk_size = min(requested_batch_size, engine_batch_size)
+
+    # Process grids in batches
+    for batch_start in range(0, len(grids), chunk_size):
+        batch_end = min(batch_start + chunk_size, len(grids))
+        batch_grids = grids[batch_start:batch_end]
+        batch_offsets = offsets[batch_start:batch_end]
+
+        # Preprocess batch
+        valid_batch = preprocess_batch(batch_grids)
+        engine_batch, valid_count = _build_engine_batch(valid_batch, engine_batch_size)
+
+        # Inference
+        output_batch = infer(context, inputs, outputs, stream, engine_batch)
+        per_item_outputs = _split_output_per_item(output_batch, engine_batch_size)
+
+        # Process only valid (non-padded) outputs
+        for output, (tile_x, tile_y) in zip(
+            per_item_outputs[:valid_count], batch_offsets
+        ):
+            preds = output.reshape(5, -1)
+
+            for i in range(preds.shape[1]):
+                conf = preds[4, i]
+                if conf < conf_threshold:
+                    continue
+
+                cx, cy, w, h = preds[0, i], preds[1, i], preds[2, i], preds[3, i]
+
+                # Convert from tile normalized coords to original frame coords
+                x1 = int(tile_x + (cx - w / 2))
+                y1 = int(tile_y + (cy - h / 2))
+                x2 = int(tile_x + (cx + w / 2))
+                y2 = int(tile_y + (cy + h / 2))
+
+                # Clamp to frame boundaries
+                x1 = max(0, min(x1, orig_w - 1))
+                y1 = max(0, min(y1, orig_h - 1))
+                x2 = max(0, min(x2, orig_w - 1))
+                y2 = max(0, min(y2, orig_h - 1))
+
+                if x1 < x2 and y1 < y2:
+                    all_boxes.append((x1, y1, x2, y2, float(conf)))
+
+    # NMS on all detections
+    if not all_boxes:
+        return []
+
+    rects = [[x1, y1, x2 - x1, y2 - y1] for x1, y1, x2, y2, _ in all_boxes]
+    scores = [c for *_, c in all_boxes]
+    indices = cv2.dnn.NMSBoxes(rects, scores, conf_threshold, nms_threshold=0.45)
+    return [all_boxes[i] for i in indices.flatten()] if len(indices) > 0 else []
+
+
 def main():
-    engine = load_engine(ENGINE_PATH)
-    context = engine.create_execution_context()
-    inputs, outputs, stream = allocate_buffers(engine)
+    cuda.init()
+    device = cuda.Device(0)
+    ctx = device.make_context()
+    cap = None
 
-    cap = cv2.VideoCapture(VIDEO_PATH)
-    if not cap.isOpened():
-        raise RuntimeError(f'No se pudo abrir el video: {VIDEO_PATH}')
+    try:
+        engine = load_engine(ENGINE_PATH)
+        context = engine.create_execution_context()
+        inputs, outputs, stream = allocate_buffers(engine)
+        input_name, _ = get_input_output_names(engine)
+        engine_batch_size = get_engine_batch_size(engine, input_name)
 
-    orig_w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-    orig_h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-    times = []
-    frame_count = 0
+        cap = cv2.VideoCapture(VIDEO_PATH)
+        if not cap.isOpened():
+            raise RuntimeError(f'No se pudo abrir el video: {VIDEO_PATH}')
 
-    # warmup
-    for _ in range(10):
+        orig_w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        orig_h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        times = []
+        frame_count = 0
+
+        # warmup using engine batch size
+        for _ in range(10):
+            warmup_frames = [
+                np.random.randint(0, 255, (GRID_SIZE, GRID_SIZE, 3), dtype=np.uint8)
+                for _ in range(engine_batch_size)
+            ]
+            warmup_batch = preprocess_batch(warmup_frames)
+            infer(context, inputs, outputs, stream, warmup_batch)
+
+        effective_chunk = min(REQUESTED_BATCH_SIZE, engine_batch_size)
+        print(f'Mode: {"TILED" if TILED else "FULL-FRAME"}')
+        print(f'Engine batch size: {engine_batch_size}')
         if TILED:
-            warmup_frame = np.random.randint(
-                0, 255, (GRID_SIZE, GRID_SIZE, 3), dtype=np.uint8
+            print(
+                f'Requested tiled batch: {REQUESTED_BATCH_SIZE} -> effective: {effective_chunk}'
             )
-            img = preprocess(warmup_frame)
-        else:
-            warmup_frame = np.random.randint(0, 255, (640, 640, 3), dtype=np.uint8)
-            img = preprocess(warmup_frame)
-        infer(context, inputs, outputs, stream, img)
+        print(f'Processing {VIDEO_PATH}...\n')
 
-    print(f'Mode: {"TILED" if TILED else "FULL-FRAME"}')
-    print(f'Processing {VIDEO_PATH}...\n')
+        while True:
+            ret, frame = cap.read()
+            if not ret:
+                break
 
-    while True:
-        ret, frame = cap.read()
-        if not ret:
-            break
+            if TILED:
+                grids, offsets = generate_grids(frame, grid_size=GRID_SIZE)
+                t0 = time.perf_counter()
+                boxes = process_grids_batched(
+                    grids,
+                    offsets,
+                    context,
+                    inputs,
+                    outputs,
+                    stream,
+                    orig_h,
+                    orig_w,
+                    engine_batch_size=engine_batch_size,
+                    requested_batch_size=REQUESTED_BATCH_SIZE,
+                )
+                t1 = time.perf_counter()
+                times.append(t1 - t0)
+            else:
+                img = preprocess(frame)
+                img_engine, _ = _build_engine_batch(img, engine_batch_size)
+                t0 = time.perf_counter()
+                output_batch = infer(context, inputs, outputs, stream, img_engine)
+                t1 = time.perf_counter()
+                times.append(t1 - t0)
+                output = _split_output_per_item(output_batch, engine_batch_size)[0]
+                boxes = postprocess(output.reshape(5, -1), orig_h, orig_w)
 
-        if TILED:
-            grids, offsets = generate_grids(frame, grid_size=GRID_SIZE)
-            t0 = time.perf_counter()
+            frame = draw(frame, boxes)
 
-            # Process each tile individually (TensorRT engine typically has batch_size=1)
-            outputs_list = []
-            for grid in grids:
-                img = preprocess(grid)
-                output = infer(context, inputs, outputs, stream, img)
-                outputs_list.append(output)
+            cv2.imshow('TensorRT Inference', frame)
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
 
-            t1 = time.perf_counter()
-            times.append(t1 - t0)
-            boxes = postprocess_tiled(outputs_list, offsets, orig_h, orig_w)
-        else:
-            img = preprocess(frame)
-            t0 = time.perf_counter()
-            output = infer(context, inputs, outputs, stream, img)
-            t1 = time.perf_counter()
-            times.append(t1 - t0)
-            boxes = postprocess(output, orig_h, orig_w)
+            frame_count += 1
+            if frame_count % 30 == 0:
+                print(f'Processed {frame_count} frames...')
 
-        frame = draw(frame, boxes)
-
-        cv2.imshow('TensorRT Inference', frame)
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
-
-        frame_count += 1
-        if frame_count % 30 == 0:
-            print(f'Processed {frame_count} frames...')
-
-    cap.release()
-    cv2.destroyAllWindows()
-
-    mean_latency = sum(times) / len(times)
-    fps = 1.0 / mean_latency
-    print('\n=== Results ===')
-    print(f'Mode: {"TILED" if TILED else "FULL-FRAME"}')
-    print(f'Frames processed: {frame_count}')
-    print(f'Mean latency: {mean_latency:.6f} s')
-    print(f'FPS: {fps:.2f}')
-    print(f'Min latency: {min(times):.6f} s')
-    print(f'Max latency: {max(times):.6f} s')
+        mean_latency = sum(times) / len(times)
+        fps = 1.0 / mean_latency
+        print('\n=== Results ===')
+        print(f'Mode: {"TILED" if TILED else "FULL-FRAME"}')
+        print(f'Frames processed: {frame_count}')
+        print(f'Mean latency: {mean_latency:.6f} s')
+        print(f'FPS: {fps:.2f}')
+        print(f'Min latency: {min(times):.6f} s')
+        print(f'Max latency: {max(times):.6f} s')
+    finally:
+        if cap is not None:
+            cap.release()
+        cv2.destroyAllWindows()
+        ctx.pop()
 
 
 if __name__ == '__main__':

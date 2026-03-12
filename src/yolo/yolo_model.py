@@ -101,8 +101,6 @@ class YoloModel:
                         )
                         frame_mask = np.zeros((height, width), dtype=np.uint8)
                         r_boxes.setdefault(frame_count, [])
-                        t_render_latency: float = 0.0
-                        t_render_start = time.perf_counter()
                         for box in boxes:
                             x1, y1, x2, y2 = map(int, box)
                             r_boxes[frame_count].append([x1, y1, x2, y2])
@@ -116,13 +114,10 @@ class YoloModel:
 
                             log_file.write(f'{x1},{y1},{x2},{y2}\n')
                             cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 0, 255), 3)
-                        t_render_end = time.perf_counter()
-                        t_render_latency = t_render_end - t_render_start
-                        t_latency = latency + t_render_latency
                         latency_historic = np.insert(
                             latency_historic,
                             len(latency_historic),
-                            round(t_latency, 4),
+                            latency,
                         )
 
                     else:
@@ -134,7 +129,7 @@ class YoloModel:
                         latency_historic = np.insert(
                             latency_historic,
                             len(latency_historic),
-                            round(t_end - t_start, 4),
+                            t_end - t_start,
                         )
                         r_boxes.setdefault(frame_count, [])
                         for r in results:
