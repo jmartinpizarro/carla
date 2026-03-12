@@ -1,0 +1,9 @@
+model:
+  - 'yolov8n'
+epochs: 1
+batch: 4
+min_seed: 42
+max_seed: 43
+box: 5.0
+tiled: True
+results_folder: "test_experiment"

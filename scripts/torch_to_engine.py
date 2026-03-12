@@ -19,7 +19,6 @@ def get_args():
 
     parser.add_argument(
         '--tiled',
-        required=True,
         action='store_true',
         help='The model uses tiling approaches or not',
     )

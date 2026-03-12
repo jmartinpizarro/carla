@@ -3,27 +3,43 @@ Contains functions used for tiling-based inference
 """
 
 import cv2
+import time
 import torch
 from torchvision.ops import nms
+
+
+def _sync_cuda_for_timing():
+    """Synchronize CUDA to avoid underestimating asynchronous GPU work."""
+    if torch.cuda.is_available():
+        torch.cuda.synchronize()
 
 
 def process_frame_with_grids(
     frame, model, conf_threshold=0.4, save_debug=False, grid_size=640
 ):
     """
-    Process a frame converted into a grid. The inference processes all grids
+    Process a frame converted into a grid. The inference processes all grids. Returns the latency
     @param frame: cv2 Object
     """
     grids, offsets = generate_grid(frame, grid_size=grid_size)
 
+    t_latency: float = 0.0
+
     # BATCH INFERENCE
+    _sync_cuda_for_timing()
+    t_inf_start = time.perf_counter()
     batch_results = model(grids, conf=conf_threshold, verbose=False)
+    _sync_cuda_for_timing()
+    t_inf_end = time.perf_counter()
+    t_inf_latency = t_inf_end - t_inf_start
 
     all_boxes = []
     all_scores = []
     all_classes = []
     all_tile_indices = []
 
+    # postprocessing conversions
+    t_postprocessing_start = time.perf_counter()
     for idx, (r, (ox, oy)) in enumerate(zip(batch_results, offsets)):
         if save_debug:
             grid_with_boxes = grids[idx].copy()
@@ -33,45 +49,53 @@ def process_frame_with_grids(
                 cv2.imwrite(f'debug_tiles/grid_{idx}_predicted.png', grid_with_boxes)
             continue
 
-        boxes = r.boxes.xyxy.cpu()
-        scores = r.boxes.conf.cpu()
-        classes = r.boxes.cls.cpu()
+        # Keep tensors on-device during accumulation; move once to CPU at the end.
+        boxes = r.boxes.xyxy
+        scores = r.boxes.conf
+        classes = r.boxes.cls
 
-        for box, score, cls in zip(boxes, scores, classes):
-            x1, y1, x2, y2 = box
+        offset = boxes.new_tensor([ox, oy, ox, oy])
+        boxes = boxes + offset
 
-            if save_debug:
+        if save_debug:
+            boxes_cpu = boxes.detach().cpu()
+            scores_cpu = scores.detach().cpu()
+            for box, score in zip(boxes_cpu, scores_cpu):
+                x1, y1, x2, y2 = map(int, box.tolist())
                 cv2.rectangle(
                     grid_with_boxes,
-                    (int(x1), int(y1)),
-                    (int(x2), int(y2)),
+                    (x1, y1),
+                    (x2, y2),
                     (0, 255, 0),
                     2,
                 )
                 cv2.putText(
                     grid_with_boxes,
-                    f'{score:.2f}',
-                    (int(x1), int(y1) - 5),
+                    f'{float(score):.2f}',
+                    (x1, y1 - 5),
                     cv2.FONT_HERSHEY_SIMPLEX,
                     0.5,
                     (0, 255, 0),
                     1,
                 )
 
-            all_boxes.append([x1 + ox, y1 + oy, x2 + ox, y2 + oy])
-            all_scores.append(score)
-            all_classes.append(cls)
-            all_tile_indices.append((oy // grid_size, ox // grid_size))
+        all_boxes.append(boxes)
+        all_scores.append(scores)
+        all_classes.append(classes)
+
+        tile_index = (oy // grid_size, ox // grid_size)
+        all_tile_indices.extend([tile_index] * int(boxes.shape[0]))
 
         if save_debug:
             cv2.imwrite(f'debug_tiles/grid_{idx}_predicted.png', grid_with_boxes)
 
     if len(all_boxes) == 0:
-        return [], [], []
+        t_postprocessing_latency = time.perf_counter() - t_postprocessing_start
+        return [], [], [], round(t_inf_latency + t_postprocessing_latency, 4)
 
-    boxes = torch.tensor(all_boxes)
-    scores = torch.tensor(all_scores)
-    classes = torch.tensor(all_classes)
+    boxes = torch.cat(all_boxes, dim=0).cpu()
+    scores = torch.cat(all_scores, dim=0).cpu()
+    classes = torch.cat(all_classes, dim=0).cpu()
 
     # merge boxes that are adjacent - this happens because of how our grid-based
     # inference work
@@ -91,7 +115,12 @@ def process_frame_with_grids(
     scores = scores[keep]
     classes = classes[keep]
 
-    return boxes, scores, classes
+    t_postprocessing_end = time.perf_counter()
+    t_postprocessing_latency = t_postprocessing_end - t_postprocessing_start
+
+    t_latency = round(t_inf_latency + t_postprocessing_latency, 4)
+
+    return boxes, scores, classes, t_latency
 
 
 def generate_grid(image, grid_size=640):

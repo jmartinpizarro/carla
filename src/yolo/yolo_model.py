@@ -5,12 +5,20 @@ Contains the class YoloModel used for doing inference with a .pt model.
 from src.yolo.utils.tiling_utils import process_frame_with_grids
 
 import cv2
+import time
 import numpy as np
 import os
+import torch
 from pyproj import Geod
 from ultralytics import YOLO
 import matplotlib.pyplot as plt
 from sklearn.neighbors import KernelDensity
+
+
+def _sync_cuda_for_timing():
+    """Synchronize CUDA to avoid underestimating asynchronous GPU work."""
+    if torch.cuda.is_available():
+        torch.cuda.synchronize()
 
 
 class YoloModel:
@@ -39,6 +47,7 @@ class YoloModel:
 
         is_video = self.input_data.lower().endswith('.mp4')
         coverage_historic = np.array(())
+        latency_historic = np.array(())
 
         if is_video:
             # create some stuff we will need for procesing those files
@@ -87,11 +96,13 @@ class YoloModel:
                         log_file.write(f'<{frame_count}>\n')
 
                     if self.tiled:
-                        boxes, scores, classes = process_frame_with_grids(
+                        boxes, scores, classes, latency = process_frame_with_grids(
                             frame, YOLO_MODEL, conf_threshold
                         )
                         frame_mask = np.zeros((height, width), dtype=np.uint8)
                         r_boxes.setdefault(frame_count, [])
+                        t_render_latency: float = 0.0
+                        t_render_start = time.perf_counter()
                         for box in boxes:
                             x1, y1, x2, y2 = map(int, box)
                             r_boxes[frame_count].append([x1, y1, x2, y2])
@@ -105,9 +116,26 @@ class YoloModel:
 
                             log_file.write(f'{x1},{y1},{x2},{y2}\n')
                             cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 0, 255), 3)
-                    else:
-                        results = YOLO_MODEL(frame, conf=conf_threshold, iou=iou)
+                        t_render_end = time.perf_counter()
+                        t_render_latency = t_render_end - t_render_start
+                        t_latency = latency + t_render_latency
+                        latency_historic = np.insert(
+                            latency_historic,
+                            len(latency_historic),
+                            round(t_latency, 4),
+                        )
 
+                    else:
+                        _sync_cuda_for_timing()
+                        t_start = time.perf_counter()
+                        results = YOLO_MODEL(frame, conf=conf_threshold, iou=iou)
+                        _sync_cuda_for_timing()
+                        t_end = time.perf_counter()
+                        latency_historic = np.insert(
+                            latency_historic,
+                            len(latency_historic),
+                            round(t_end - t_start, 4),
+                        )
                         r_boxes.setdefault(frame_count, [])
                         for r in results:
                             frame_mask = np.zeros((height, width), dtype=np.uint8)
@@ -124,7 +152,8 @@ class YoloModel:
 
                                 log_file.write(f'{x1},{y1},{x2},{y2}\n')
                                 cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 0, 255), 3)
-                    log_file.write(f'\nMean Coverage: {np.mean(coverage_historic)}\n')
+                    log_file.write(f'Mean Coverage: {np.mean(coverage_historic)}\n')
+                    log_file.write(f'Mean Latency: {np.mean(latency_historic)}\n')
                 except Exception as e:
                     print(
                         f'[YoloModel] :: An error has ocurred when writing the predictions:\n{e}\n'
