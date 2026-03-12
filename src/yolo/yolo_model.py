@@ -140,9 +140,9 @@ class YoloModel:
                     print(
                         f'Processed {frame_count}/{total_frames} frames ({100 * frame_count / total_frames:.1f}%)'
                     )
-                # cv2.imshow('YOLO Video Prediction', frame)
-                # if cv2.waitKey(1) & 0xFF == ord('q'):
-                #    break
+                cv2.imshow('YOLO Video Prediction', frame)
+                if cv2.waitKey(1) & 0xFF == ord('q'):
+                    break
             else:
                 cv2.imwrite('output.jpg', frame)
                 # cv2.imshow('YOLO Prediction', frame)
