@@ -44,7 +44,7 @@ def main():
     model.export(
         format='onnx',
         imgsz=640,
-        half=False,
+        half=True,
         dynamic=False,
         batch=batch,
         device=0,

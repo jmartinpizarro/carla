@@ -2,14 +2,13 @@ import tensorrt as trt
 import pycuda.driver as cuda
 import numpy as np
 import cv2
+import platform
 import time
 
-ENGINE_PATH = (
-    'results_yolo_tiled_v2/yolov8n_e200_b16_s42_box5.0_93bb6/weights/best.engine'
-)
-VIDEO_PATH = 'data/DJI_20260213114207_0018_D.MP4'
+ENGINE_PATH = 'results_yolo_/results_yolo_lowFlight_v11/yolov8n_e200_b16_s42_box5.0_d59ef/weights/best.engine'
+VIDEO_PATH = 'data/DJI_20260213113651_0017_D.MP4'
 CONF_THRESHOLD = 0.5
-TILED = True  # Set to True for tiled inference, False for full-frame inference
+TILED = False  # Set to True for tiled inference, False for full-frame inference
 GRID_SIZE = 640
 REQUESTED_BATCH_SIZE = 3
 
@@ -385,7 +384,24 @@ def main():
         input_name, _ = get_input_output_names(engine)
         engine_batch_size = get_engine_batch_size(engine, input_name)
 
-        cap = cv2.VideoCapture(VIDEO_PATH)
+        if platform.machine() == 'aarch64':
+            pipeline = (
+                f'filesrc location={VIDEO_PATH} ! '
+                'qtdemux ! '
+                'h264parse ! '
+                'nvv4l2decoder ! '
+                'nvvidconv ! '
+                'video/x-raw, format=BGRx ! '
+                'videoconvert ! '
+                'video/x-raw, format=BGR ! '
+                'appsink'
+            )
+            # maintain nvdec for gpu usage, ano not CPU (jetson may got fucked if we are using this)
+            cap = cv2.VideoCapture(pipeline, cv2.CAP_GSTREAMER)
+
+        else:
+            cap = cv2.VideoCapture(VIDEO_PATH)
+
         if not cap.isOpened():
             raise RuntimeError(f'No se pudo abrir el video: {VIDEO_PATH}')
 
