@@ -5,12 +5,12 @@ import cv2
 import platform
 import time
 
-ENGINE_PATH = 'weights/nt/v8.engine'
+ENGINE_PATH = 'weights/t/v8.engine'
 VIDEO_PATH = 'data/DJI_20260213114207_0018_D.MP4'
 CONF_THRESHOLD = 0.5
-TILED = False  # Set to True for tiled inference, False for full-frame inference
+TILED = True  # Set to True for tiled inference, False for full-frame inference
 GRID_SIZE = 640
-REQUESTED_BATCH_SIZE = 3
+REQUESTED_BATCH_SIZE = 2
 
 # In order to make this work, it is necessary to use OpenCV built with
 # GStreamer support. Otherwise, the video processing will be the bottleneck.
@@ -407,7 +407,7 @@ def main():
                 'video/x-raw,format=BGRx ! '
                 'videoconvert ! '
                 'video/x-raw,format=BGR ! '
-                'appsink drop=1 sync=false max-buffers=1'
+                'appsink drop=1 sync=true max-buffers=1'
             )
             print(f'Using GStreamer pipeline: {pipeline}')
             # Keep NVDEC on Jetson for hardware video decode.
