@@ -5,12 +5,15 @@ import cv2
 import platform
 import time
 
-ENGINE_PATH = 'results_yolo_/results_yolo_lowFlight_v11/yolov8n_e200_b16_s42_box5.0_d59ef/weights/best.engine'
-VIDEO_PATH = 'data/DJI_20260213113651_0017_D.MP4'
+ENGINE_PATH = 'weights/nt/v8.engine'
+VIDEO_PATH = 'data/DJI_20260213114207_0018_D.MP4'
 CONF_THRESHOLD = 0.5
 TILED = False  # Set to True for tiled inference, False for full-frame inference
 GRID_SIZE = 640
 REQUESTED_BATCH_SIZE = 3
+
+# In order to make this work, it is necessary to use OpenCV built with
+# GStreamer support. Otherwise, the video processing will be the bottleneck.
 
 
 def _opencv_has_gstreamer():
