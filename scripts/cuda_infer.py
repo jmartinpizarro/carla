@@ -13,6 +13,10 @@ GRID_SIZE = 640
 REQUESTED_BATCH_SIZE = 3
 
 
+def _opencv_has_gstreamer():
+    return 'GStreamer:                   YES' in cv2.getBuildInformation()
+
+
 def load_engine(engine_path):
     logger = trt.Logger(trt.Logger.WARNING)
     with open(engine_path, 'rb') as f:
@@ -385,18 +389,25 @@ def main():
         engine_batch_size = get_engine_batch_size(engine, input_name)
 
         if platform.machine() == 'aarch64':
+            if not _opencv_has_gstreamer():
+                raise RuntimeError(
+                    'OpenCV no tiene soporte GStreamer. '
+                    'Instala OpenCV de JetPack (apt) o compila OpenCV con WITH_GSTREAMER=ON.'
+                )
+
             pipeline = (
-                f'filesrc location={VIDEO_PATH} ! '
+                f'filesrc location="{VIDEO_PATH}" ! '
                 'qtdemux ! '
                 'h264parse ! '
                 'nvv4l2decoder ! '
                 'nvvidconv ! '
-                'video/x-raw, format=BGRx ! '
+                'video/x-raw,format=BGRx ! '
                 'videoconvert ! '
-                'video/x-raw, format=BGR ! '
-                'appsink'
+                'video/x-raw,format=BGR ! '
+                'appsink drop=1 sync=false max-buffers=1'
             )
-            # maintain nvdec for gpu usage, ano not CPU (jetson may got fucked if we are using this)
+            print(f'Using GStreamer pipeline: {pipeline}')
+            # Keep NVDEC on Jetson for hardware video decode.
             cap = cv2.VideoCapture(pipeline, cv2.CAP_GSTREAMER)
 
         else:
