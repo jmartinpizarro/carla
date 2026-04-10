@@ -35,14 +35,14 @@ class YoloExperiment:
             print(
                 f'[YoloExperiment :: parse_config()] :: An error has ocurred when importing the .yaml file:\n{e}\n'
             )
-            return
+            return {}
 
         # asume user is not retard and it will not do some weird combinations
         if config['epochs'] <= 0:
             print(
                 '[YoloExperiment :: parse_config()] :: The epochs parameter cannot be less or equal than 0'
             )
-            return
+            return {}
 
         if config['min_seed'] >= config['max_seed']:
             print(

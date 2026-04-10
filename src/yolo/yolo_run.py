@@ -24,12 +24,20 @@ class YoloRun:
         self.seed: int = seed
         self.box: float = box
         self.tiled: bool = tiled
-        self.data = data  # it must not include data.yaml
-        self.metrics: Dict = None
+        self.data = data
+        self.metrics: Dict = {}
 
-    def train(
-        self,
-    ):
+    def _get_data_yaml_path(self) -> str:
+        if str(self.data).endswith('.yaml'):
+            return str(self.data)
+        return os.path.join(str(self.data), 'data.yaml')
+
+    def _get_model_path(self) -> str:
+        if str(self.model).endswith('.pt'):
+            return str(self.model)
+        return f'{self.model}.pt'
+
+    def train(self, project: str | None = None):
         exp_id = uuid.uuid4().hex[:5]
 
         model_path = self.model
@@ -46,8 +54,10 @@ class YoloRun:
             f'\t-Bbox Loss Size: {self.box}\n',
             f'\t-Tiled: {self.tiled}\n',
         )
+
+        output_project = project or f'results_{exp_name}'
         try:
-            model = YOLO(f'{self.model}.pt')
+            model = YOLO(self._get_model_path())
         except Exception as e:
             print(
                 f'[YoloRun] :: An error has ocurred when importing the model {exp_name}:\n{e}\n'
@@ -55,14 +65,14 @@ class YoloRun:
 
         try:
             model.train(
-                data=f'{self.data}/data.yaml',
+                data=self._get_data_yaml_path(),
                 epochs=self.epochs,
                 batch=self.batch,
                 imgsz=640,
                 optimizer='auto',
                 seed=self.seed,
                 box=self.box,
-                project=f'results_{exp_name}',
+                project=output_project,
                 name=exp_name,
                 cache='disk',
                 plots=True,
@@ -72,7 +82,7 @@ class YoloRun:
                 f'[YoloRun] :: An error has ocurred during the training of the model {exp_name}:\n{e}\n'
             )
 
-        return f'results_{exp_name}'
+        return os.path.join(output_project, exp_name)
 
     def test(self, model_route: str):
         """
@@ -100,7 +110,7 @@ class YoloRun:
 
         try:
             prediction_metrics = YOLO_VAL.val(
-                data=f'{self.data}/data.yaml',
+                data=self._get_data_yaml_path(),
                 split='test',
                 imgsz=640,
                 half=True,
