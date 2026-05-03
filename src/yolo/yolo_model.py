@@ -123,7 +123,9 @@ class YoloModel:
                     else:
                         _sync_cuda_for_timing()
                         t_start = time.perf_counter()
-                        results = YOLO_MODEL(frame, conf=conf_threshold, iou=iou, verbose=False)
+                        results = YOLO_MODEL(
+                            frame, conf=conf_threshold, iou=iou, verbose=False
+                        )
                         _sync_cuda_for_timing()
                         t_end = time.perf_counter()
                         latency_historic = np.insert(
@@ -161,7 +163,11 @@ class YoloModel:
                 out.write(frame)
                 frame_count += 1
                 if frame_count % 30 == 0:
-                    avg_fps = 1.0 / np.mean(latency_historic) if len(latency_historic) > 0 else 0.0
+                    avg_fps = (
+                        1.0 / np.mean(latency_historic)
+                        if len(latency_historic) > 0
+                        else 0.0
+                    )
                     print(
                         f'Processed {frame_count}/{total_frames} frames ({100 * frame_count / total_frames:.1f}%) avg FPS: {avg_fps:.2f}'
                     )

@@ -55,13 +55,13 @@ class YoloRun:
             f'\t-Tiled: {self.tiled}\n',
         )
 
-        output_project = project or f'results_{exp_name}'
+        output_project = project or f'results_{model_name}'
         try:
             model = YOLO(self._get_model_path())
         except Exception as e:
-            print(
-                f'[YoloRun] :: An error has ocurred when importing the model {exp_name}:\n{e}\n'
-            )
+            raise FileNotFoundError(
+                f'[YoloRun] :: An error has ocurred when importing the model {exp_name}'
+            ) from e
 
         try:
             model.train(
@@ -78,9 +78,13 @@ class YoloRun:
                 plots=True,
             )
         except Exception as e:
-            print(
-                f'[YoloRun] :: An error has ocurred during the training of the model {exp_name}:\n{e}\n'
-            )
+            raise RuntimeError(
+                f'[YoloRun] :: An error has ocurred during the training of the model {exp_name}'
+            ) from e
+
+        save_dir = getattr(getattr(model, 'trainer', None), 'save_dir', None)
+        if save_dir is not None:
+            return str(save_dir)
 
         return os.path.join(output_project, exp_name)
 
@@ -101,12 +105,15 @@ class YoloRun:
             f'\t-Tiled: {self.tiled}\n',
         )
 
+        best_model_path = os.path.join(model_route, 'weights', 'best.pt')
+        model_route_name = os.path.basename(os.path.normpath(model_route))
+
         try:
-            YOLO_VAL = YOLO(f'{model_route}/weights/best.pt')
+            YOLO_VAL = YOLO(best_model_path)
         except Exception as e:
-            print(
-                f'[YoloRun] :: An error has ocurred when importing the model {model_route}:\n{e}\n'
-            )
+            raise FileNotFoundError(
+                f'[YoloRun] :: Could not load trained weights from {best_model_path}'
+            ) from e
 
         try:
             prediction_metrics = YOLO_VAL.val(
@@ -116,18 +123,22 @@ class YoloRun:
                 half=True,
                 device='cuda',
                 save=True,
-                name=f'test_{model_route}',
+                name=f'test_{model_route_name}',
                 save_conf=True,
                 save_txt=False,
                 save_json=False,
                 verbose=False,
             )
         except Exception as e:
-            print(
-                f'[YoloRun] :: An error has ocurred during the training of the model {model_route}:\n{e}\n'
-            )
+            raise RuntimeError(
+                f'[YoloRun] :: An error has ocurred during validation of the model {model_route}'
+            ) from e
 
         model_coverage = {'gt': [], 'pred': []}
+
+        # Use a fresh model instance for per-image predictions to avoid
+        # predictor state carryover from val() with inference tensors.
+        coverage_model = YOLO(best_model_path)
 
         # for each image of the dataset, process it and add it to the dict
         for image in os.listdir(f'{self.data}/test/images'):
@@ -135,7 +146,9 @@ class YoloRun:
             label_route = f'{self.data}/test/labels/{image[:-4]}.txt'
 
             model_coverage['gt'].append(gt_coverage_percent(image_route, label_route))
-            model_coverage['pred'].append(pred_coverage_percent(image_route, YOLO_VAL))
+            model_coverage['pred'].append(
+                pred_coverage_percent(image_route, coverage_model)
+            )
 
         mean_pred = np.mean(model_coverage['pred'])
         mean_gt = np.mean(model_coverage['gt'])

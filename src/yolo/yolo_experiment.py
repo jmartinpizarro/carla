@@ -109,16 +109,17 @@ class YoloExperiment:
 
             # train
             results_folder = run.train()
+            results_folder_name = os.path.basename(os.path.normpath(results_folder))
             # then test
             run.test(results_folder)
             # as metrics have been saved into the YoloRun object, it is possible to retrieve them after the training. If the program breaks (e.g. VRAM), training metrics are lost
             runs.append(run)
 
-            os.makedirs(f'{TESTING_EXPORT_DIR}/{results_folder}', exist_ok=True)
+            os.makedirs(f'{TESTING_EXPORT_DIR}/{results_folder_name}', exist_ok=True)
 
             test_metrics_df = pd.DataFrame(run.metrics)
             test_csv_path = os.path.join(
-                f'{TESTING_EXPORT_DIR}/{results_folder}',
-                f'{results_folder}_test_metrics.csv',
+                f'{TESTING_EXPORT_DIR}/{results_folder_name}',
+                f'{results_folder_name}_test_metrics.csv',
             )
             test_metrics_df.to_csv(test_csv_path, index=False)
