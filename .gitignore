@@ -207,8 +207,9 @@ marimo/_lsp/
 __marimo__/
 
 data/
-results_*/
+results_/
 !yolo_test_results_*
+test_yolo*/
 runs/
 simple_plots/*
 *.mp4
